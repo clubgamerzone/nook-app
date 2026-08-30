@@ -9,8 +9,8 @@ import {
   setDoc,
 } from '@react-native-firebase/firestore';
 
-import type {UserProfile} from '../../profile/domain/models';
-import type {CreatedInvitation, InvitationPreview} from '../domain/models';
+import type { UserProfile } from '../../profile/domain/models';
+import type { CreatedInvitation, InvitationPreview } from '../domain/models';
 
 const INVITATION_LIFETIME_MS = 24 * 60 * 60 * 1000;
 
@@ -22,7 +22,10 @@ type InvitationData = {
   status?: string;
 };
 
-function invitationFromSnapshot(code: string, data: InvitationData | undefined) {
+function invitationFromSnapshot(
+  code: string,
+  data: InvitationData | undefined,
+) {
   if (
     !data ||
     data.status !== 'pending' ||
@@ -60,29 +63,49 @@ export class FirebaseInvitationService {
       expiresAt: Timestamp.fromDate(expiresAt),
     });
 
-    return {code: invitationRef.id, expiresAt};
+    return { code: invitationRef.id, expiresAt };
   }
 
   async preview(code: string, currentUid: string): Promise<InvitationPreview> {
     const normalizedCode = code.trim();
-    const snapshot = await getDoc(doc(getFirestore(), 'invitations', normalizedCode));
+    const snapshot = await getDoc(
+      doc(getFirestore(), 'invitations', normalizedCode),
+    );
     if (!snapshot.exists()) {
       throw new Error('invite/not-found');
     }
 
-    const invitation = invitationFromSnapshot(normalizedCode, snapshot.data() as InvitationData);
+    const invitation = invitationFromSnapshot(
+      normalizedCode,
+      snapshot.data() as InvitationData,
+    );
     if (invitation.inviterUid === currentUid) {
       throw new Error('invite/own-code');
     }
     return invitation;
   }
 
-  async accept(invitation: InvitationPreview, profile: UserProfile): Promise<string> {
+  async accept(
+    invitation: InvitationPreview,
+    profile: UserProfile,
+  ): Promise<string> {
     const database = getFirestore();
     const invitationRef = doc(database, 'invitations', invitation.code);
     const conversationRef = doc(database, 'conversations', invitation.code);
-    const inviterContactRef = doc(database, 'users', invitation.inviterUid, 'contacts', profile.uid);
-    const recipientContactRef = doc(database, 'users', profile.uid, 'contacts', invitation.inviterUid);
+    const inviterContactRef = doc(
+      database,
+      'users',
+      invitation.inviterUid,
+      'contacts',
+      profile.uid,
+    );
+    const recipientContactRef = doc(
+      database,
+      'users',
+      profile.uid,
+      'contacts',
+      invitation.inviterUid,
+    );
 
     await runTransaction(database, async transaction => {
       const snapshot = await transaction.get(invitationRef);
@@ -90,8 +113,14 @@ export class FirebaseInvitationService {
         throw new Error('invite/not-found');
       }
 
-      const currentInvitation = invitationFromSnapshot(invitation.code, snapshot.data() as InvitationData);
-      if (currentInvitation.inviterUid !== invitation.inviterUid || currentInvitation.inviterUid === profile.uid) {
+      const currentInvitation = invitationFromSnapshot(
+        invitation.code,
+        snapshot.data() as InvitationData,
+      );
+      if (
+        currentInvitation.inviterUid !== invitation.inviterUid ||
+        currentInvitation.inviterUid === profile.uid
+      ) {
         throw new Error('invite/not-available');
       }
 
@@ -103,6 +132,7 @@ export class FirebaseInvitationService {
       transaction.set(conversationRef, {
         createdAt: serverTimestamp(),
         invitationId: invitation.code,
+        messageRetentionSeconds: 604800,
         participantIds: [invitation.inviterUid, profile.uid],
       });
       transaction.set(inviterContactRef, {
@@ -133,7 +163,10 @@ export class FirebaseInvitationService {
       if (!snapshot.exists()) {
         throw new Error('invite/not-found');
       }
-      invitationFromSnapshot(invitation.code, snapshot.data() as InvitationData);
+      invitationFromSnapshot(
+        invitation.code,
+        snapshot.data() as InvitationData,
+      );
       transaction.update(invitationRef, {
         acceptedBy: currentUid,
         respondedAt: serverTimestamp(),

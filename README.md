@@ -8,7 +8,7 @@ Nook is a React Native organizer with a separately protected, invitation-only pr
 - Firebase email/password accounts and private display names
 - Settings-only Private Space with PIN, optional biometrics, background locking, and Android screenshot blocking
 - One-time QR/code invitations and multiple one-to-one contacts
-- Realtime text chat, disappearing messages, whole-chat clearing, block/report/remove, and account deletion
+- Realtime text chat, seven-day default retention, paginated history, a 2,500-message server cap, whole-chat clearing, block/report/remove, and account deletion
 
 The current text transport remains plaintext and visibly marked as development-only. It must not be used for sensitive conversations or marketed as end-to-end encrypted until the native libsignal adapter described in [release readiness](docs/RELEASE_READINESS.md) is complete and externally reviewed.
 
@@ -27,7 +27,7 @@ Android builds require JDK 17 and the configured Android SDK. Native iOS builds 
 
 ## Firebase
 
-Native configuration targets Firebase project `nook-73e02`. Deploy `firestore.rules` before testing safety controls. Firestore TTL should use `conversations/{conversationId}/messages.expiresAt` as declared in `firestore.indexes.json`.
+Native configuration targets Firebase project `nook-73e02`. Deploy the Firestore rules, indexes, and Cloud Functions before testing retention and safety controls. Firestore TTL uses the `messages` collection group's `expiresAt` field as declared in `firestore.indexes.json`.
 
 ## Release documents
 

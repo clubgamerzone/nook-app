@@ -9,7 +9,7 @@
 - Settings-only Private Space entry
 - Memory-hard local PIN verifier, increasing retry delays, and optional OS biometrics
 - Immediate background lock, neutral app-switcher cover, and Android secure-window screenshot blocking
-- Invitation-only contacts, QR/code invitations, realtime one-to-one text, retention choices, and whole-chat clearing
+- Invitation-only contacts, QR/code invitations, realtime one-to-one text, seven-day default retention, paginated history, a 2,500-message cap, and whole-chat clearing
 - Contact block, report, removal, and in-app account deletion
 - Firestore participant and relationship authorization rules
 
@@ -19,7 +19,7 @@
 2. Migrate message documents from plaintext `body` to versioned ciphertext envelopes and complete a compatibility migration.
 3. Add encrypted voice recording/upload/playback only after the messaging key/session layer exists.
 4. Conduct external cryptographic and threat-model review before making E2EE claims.
-5. Activate Firestore TTL in the project account, deploy the latest rules, enable App Check, and add server-side invitation/report abuse controls.
+5. Deploy the latest Firestore rules and message-limit functions, verify TTL deletion, enable App Check, and add server-side invitation/report abuse controls.
 6. Configure a private Android release keystore, build/test iOS on macOS, publish the privacy-policy URL, supply legal contact details, and complete store encryption/export declarations.
 7. Resolve the current high-severity React Native/Metro dependency advisories through a tested upstream framework update; do not use a forced audit downgrade as a release shortcut.
 

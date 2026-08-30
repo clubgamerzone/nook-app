@@ -1,15 +1,15 @@
-import React, {useMemo, useState} from 'react';
-import {ActivityIndicator, StyleSheet, View} from 'react-native';
-import {useSafeAreaInsets} from 'react-native-safe-area-context';
+import React, { useMemo, useState } from 'react';
+import { ActivityIndicator, StyleSheet, View } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-import {colors} from '../../../theme/colors';
-import {useContacts} from '../../contacts/hooks/useContacts';
-import {InvitationScreen} from '../../contacts/screens/InvitationScreen';
-import type {UserProfile} from '../../profile/domain/models';
-import type {Conversation} from '../domain/models';
-import {useChatPrototype} from '../hooks/useChatPrototype';
-import {ConversationListScreen} from './ConversationListScreen';
-import {ConversationScreen} from './ConversationScreen';
+import { colors } from '../../../theme/colors';
+import { useContacts } from '../../contacts/hooks/useContacts';
+import { InvitationScreen } from '../../contacts/screens/InvitationScreen';
+import type { UserProfile } from '../../profile/domain/models';
+import type { Conversation } from '../domain/models';
+import { useChatPrototype } from '../hooks/useChatPrototype';
+import { ConversationListScreen } from './ConversationListScreen';
+import { ConversationScreen } from './ConversationScreen';
 
 type Props = {
   accountEmail: string | null;
@@ -27,7 +27,12 @@ function initials(name: string) {
     .join('');
 }
 
-export function ChatPrototype({accountEmail, onExit, onSignOut, profile}: Props) {
+export function ChatPrototype({
+  accountEmail,
+  onExit,
+  onSignOut,
+  profile,
+}: Props) {
   const insets = useSafeAreaInsets();
   const contacts = useContacts(profile.uid);
   const [showInvitations, setShowInvitations] = useState(false);
@@ -50,14 +55,19 @@ export function ChatPrototype({accountEmail, onExit, onSignOut, profile}: Props)
 
   if (contacts.loading) {
     return (
-      <View style={[styles.loading, {paddingTop: insets.top}]}>
+      <View style={[styles.loading, { paddingTop: insets.top }]}>
         <ActivityIndicator color={colors.sage} />
       </View>
     );
   }
 
   if (showInvitations) {
-    return <InvitationScreen onBack={() => setShowInvitations(false)} profile={profile} />;
+    return (
+      <InvitationScreen
+        onBack={() => setShowInvitations(false)}
+        profile={profile}
+      />
+    );
   }
 
   if (chat.activeConversation) {
@@ -65,19 +75,32 @@ export function ChatPrototype({accountEmail, onExit, onSignOut, profile}: Props)
       <ConversationScreen
         conversation={chat.activeConversation}
         error={chat.messageError}
+        hasOlderMessages={chat.hasOlderMessages}
+        loadingOlderMessages={chat.loadingOlderMessages}
+        messageCount={chat.messageCount}
         messages={chat.messages}
         onBack={chat.closeConversation}
         onChangeRetention={chat.changeRetention}
         onClearChat={chat.clearChat}
+        onLoadOlderMessages={chat.loadOlderMessages}
         onBlock={async () => {
-          await contacts.setBlocked(chat.activeConversation!.contactUid, !chat.activeConversation!.blocked);
+          await contacts.setBlocked(
+            chat.activeConversation!.contactUid,
+            !chat.activeConversation!.blocked,
+          );
           chat.closeConversation();
         }}
         onRemove={async () => {
           await contacts.remove(chat.activeConversation!.contactUid);
           chat.closeConversation();
         }}
-        onReport={reason => contacts.report(chat.activeConversation!.contactUid, chat.activeConversation!.id, reason)}
+        onReport={reason =>
+          contacts.report(
+            chat.activeConversation!.contactUid,
+            chat.activeConversation!.id,
+            reason,
+          )
+        }
         onSend={chat.sendMessage}
         retentionSeconds={chat.retentionSeconds}
       />

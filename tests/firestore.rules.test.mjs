@@ -1,24 +1,36 @@
-import {after, before, test} from 'node:test';
+import { after, before, test } from 'node:test';
 import assert from 'node:assert/strict';
-import {readFileSync} from 'node:fs';
+import { readFileSync } from 'node:fs';
 
-import {assertFails, assertSucceeds, initializeTestEnvironment} from '@firebase/rules-unit-testing';
-import {addDoc, collection, doc, serverTimestamp, setDoc, updateDoc} from 'firebase/firestore';
+import {
+  assertFails,
+  assertSucceeds,
+  initializeTestEnvironment,
+} from '@firebase/rules-unit-testing';
+import {
+  addDoc,
+  collection,
+  doc,
+  serverTimestamp,
+  setDoc,
+  Timestamp,
+  updateDoc,
+} from 'firebase/firestore';
 
 let environment;
 
 before(async () => {
   environment = await initializeTestEnvironment({
-    firestore: {rules: readFileSync('firestore.rules', 'utf8')},
+    firestore: { rules: readFileSync('firestore.rules', 'utf8') },
     projectId: 'nook-rules-test',
   });
   await environment.clearFirestore();
   await environment.withSecurityRulesDisabled(async context => {
     const database = context.firestore();
-    await setDoc(doc(database, 'users/alice'), {displayName: 'Alice'});
-    await setDoc(doc(database, 'users/bob'), {displayName: 'Bob'});
+    await setDoc(doc(database, 'users/alice'), { displayName: 'Alice' });
+    await setDoc(doc(database, 'users/bob'), { displayName: 'Bob' });
     await setDoc(doc(database, 'conversations/conversation-1'), {
-      messageRetentionSeconds: 0,
+      messageRetentionSeconds: 604800,
       participantIds: ['alice', 'bob'],
     });
     await setDoc(doc(database, 'users/alice/contacts/bob'), {
@@ -46,9 +58,9 @@ test('participants can message until either contact blocks the relationship', as
     addDoc(collection(alice, 'conversations/conversation-1/messages'), {
       body: 'Hello',
       createdAt: serverTimestamp(),
-      expiresAt: null,
+      expiresAt: Timestamp.fromMillis(Date.now() + 604800 * 1000),
       kind: 'text',
-      retentionSeconds: 0,
+      retentionSeconds: 604800,
       senderUid: 'alice',
     }),
   );
@@ -64,9 +76,9 @@ test('participants can message until either contact blocks the relationship', as
     addDoc(collection(bob, 'conversations/conversation-1/messages'), {
       body: 'This must be rejected',
       createdAt: serverTimestamp(),
-      expiresAt: null,
+      expiresAt: Timestamp.fromMillis(Date.now() + 604800 * 1000),
       kind: 'text',
-      retentionSeconds: 0,
+      retentionSeconds: 604800,
       senderUid: 'bob',
     }),
   );

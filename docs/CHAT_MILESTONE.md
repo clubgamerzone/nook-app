@@ -8,7 +8,9 @@ uses the organizer-first information architecture from the product specification
 - React Native 0.87 native iOS and Android projects
 - Conversation list and one-to-one text conversation UI
 - Realtime Firestore message transport for connected test users
-- Conversation-wide disappearing messages: 24 hours, 3 days, 7 days, 30 days, or never
+- Conversation-wide disappearing messages: 24 hours, 3 days, 7 days (default), or 30 days
+- Newest 100 messages loaded first, with earlier history available on demand
+- Trusted backend enforcement of a 2,500-message cap, with an in-chat warning beginning at 2,250
 - Confirmed whole-chat clearing that removes messages for both people without removing the contact
 - Local-first Today, Agenda, reminders, medicine schedules, appointments, and notes
 - Device-local organizer alerts with daily and weekly repeat support

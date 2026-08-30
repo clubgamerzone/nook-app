@@ -12,7 +12,7 @@ service cloud.firestore {
 
     function validRetentionSeconds(seconds) {
       return seconds is int
-        && seconds in [0, 86400, 259200, 604800, 2592000];
+        && seconds in [86400, 259200, 604800, 2592000];
     }
 
     function invitationAfter(invitationId) {
@@ -47,22 +47,15 @@ service cloud.firestore {
       let seconds = request.resource.data.retentionSeconds;
       let configured = conversation(conversationId).get(
         'messageRetentionSeconds',
-        0
+        604800
       );
       return validRetentionSeconds(seconds)
         && seconds == configured
-        && (
-          (seconds == 0 && request.resource.data.expiresAt == null)
-          ||
-          (
-            seconds > 0
-            && request.resource.data.expiresAt is timestamp
-            && request.resource.data.expiresAt
-              >= request.time + duration.value(seconds - 300, 's')
-            && request.resource.data.expiresAt
-              <= request.time + duration.value(seconds + 300, 's')
-          )
-        );
+        && request.resource.data.expiresAt is timestamp
+        && request.resource.data.expiresAt
+          >= request.time + duration.value(seconds - 300, 's')
+        && request.resource.data.expiresAt
+          <= request.time + duration.value(seconds + 300, 's');
     }
 
     function validContactCreate(ownerUid, contactUid) {
@@ -232,10 +225,12 @@ service cloud.firestore {
         && request.resource.data.keys().hasOnly([
           'createdAt',
           'invitationId',
+          'messageRetentionSeconds',
           'participantIds'
         ])
         && conversationId == request.resource.data.invitationId
         && request.resource.data.createdAt == request.time
+        && request.resource.data.messageRetentionSeconds == 604800
         && request.resource.data.participantIds is list
         && request.resource.data.participantIds.size() == 2
         && invitationAfter(request.resource.data.invitationId).status == 'accepted'
