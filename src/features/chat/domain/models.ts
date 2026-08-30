@@ -7,7 +7,10 @@ export type ChatMessage = {
   body: string;
   createdAt: string;
   delivery: MessageDelivery;
+  expiresAt?: string;
 };
+
+export type MessageRetentionSeconds = 0 | 86400 | 259200 | 604800 | 2592000;
 
 export type Conversation = {
   id: string;

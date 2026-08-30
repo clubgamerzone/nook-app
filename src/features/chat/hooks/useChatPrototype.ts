@@ -1,13 +1,14 @@
 import {useCallback, useEffect, useMemo, useState} from 'react';
 
 import {FirebaseChatRepository} from '../data/FirebaseChatRepository';
-import type {ChatMessage, Conversation} from '../domain/models';
+import type {ChatMessage, Conversation, MessageRetentionSeconds} from '../domain/models';
 
 export function useChatPrototype(conversations: Conversation[], currentUid: string) {
   const repository = useMemo(() => new FirebaseChatRepository(), []);
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [activeConversation, setActiveConversation] = useState<Conversation>();
   const [messageError, setMessageError] = useState<string>();
+  const [retentionSeconds, setRetentionSeconds] = useState<MessageRetentionSeconds>(0);
 
   useEffect(() => {
     if (!activeConversation) {
@@ -15,9 +16,17 @@ export function useChatPrototype(conversations: Conversation[], currentUid: stri
     }
 
     setMessageError(undefined);
-    return repository.subscribeMessages(activeConversation.id, currentUid, setMessages, () =>
+    const unsubscribeMessages = repository.subscribeMessages(activeConversation.id, currentUid, setMessages, () =>
       setMessageError('Messages could not be synchronized. Check your connection.'),
     );
+    const unsubscribeRetention = repository.subscribeRetention(activeConversation.id, setRetentionSeconds, () =>
+      setMessageError('The disappearing-message setting could not be synchronized.'),
+    );
+
+    return () => {
+      unsubscribeMessages();
+      unsubscribeRetention();
+    };
   }, [activeConversation, currentUid, repository]);
 
   const openConversation = useCallback((conversation: Conversation) => {
@@ -28,6 +37,7 @@ export function useChatPrototype(conversations: Conversation[], currentUid: stri
   const closeConversation = useCallback(() => {
     setActiveConversation(undefined);
     setMessages([]);
+    setRetentionSeconds(0);
   }, []);
 
   const sendMessage = useCallback(
@@ -47,13 +57,31 @@ export function useChatPrototype(conversations: Conversation[], currentUid: stri
     [activeConversation, currentUid, repository],
   );
 
+  const changeRetention = useCallback(
+    async (seconds: MessageRetentionSeconds) => {
+      if (!activeConversation) {
+        return;
+      }
+      setMessageError(undefined);
+      try {
+        await repository.updateRetention(activeConversation.id, currentUid, seconds);
+      } catch {
+        setMessageError('The disappearing-message setting was not changed.');
+        throw new Error('retention-update-failed');
+      }
+    },
+    [activeConversation, currentUid, repository],
+  );
+
   return {
     activeConversation,
+    changeRetention,
     closeConversation,
     conversations,
     messageError,
     messages,
     openConversation,
+    retentionSeconds,
     sendMessage,
   };
 }

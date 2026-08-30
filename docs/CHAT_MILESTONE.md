@@ -9,6 +9,7 @@ has been validated.
 - React Native 0.87 native iOS and Android projects
 - Conversation list and one-to-one text conversation UI
 - Realtime Firestore message transport for connected test users
+- Conversation-wide disappearing messages: 24 hours, 3 days, 7 days, 30 days, or never
 - Typed repository and cryptography boundaries
 - Firebase email/password account gate
 - Native Firebase Authentication and Firestore modules
@@ -67,6 +68,12 @@ capability-style invitation reads, atomic contact acceptance, participant-only
 conversation reads, and participant-only message reads and creates. The current
 message body transport is plaintext solely to validate realtime behavior during
 development. It must not be used for production or sensitive conversations.
+
+Disappearing-message changes apply only to messages sent after the setting is
+changed. Expired messages are hidden by the clients promptly. The `expiresAt`
+field is declared as the Firestore TTL field so the server can permanently
+remove them asynchronously once that policy is activated; `null` means that a
+message never expires.
 
 ## Next milestone
 

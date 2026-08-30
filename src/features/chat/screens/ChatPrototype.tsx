@@ -64,7 +64,9 @@ export function ChatPrototype({accountEmail, onSignOut, profile}: Props) {
         error={chat.messageError}
         messages={chat.messages}
         onBack={chat.closeConversation}
+        onChangeRetention={chat.changeRetention}
         onSend={chat.sendMessage}
+        retentionSeconds={chat.retentionSeconds}
       />
     );
   }

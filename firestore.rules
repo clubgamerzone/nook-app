@@ -10,6 +10,11 @@ service cloud.firestore {
       return name is string && name.size() >= 2 && name.size() <= 40;
     }
 
+    function validRetentionSeconds(seconds) {
+      return seconds is int
+        && seconds in [0, 86400, 259200, 604800, 2592000];
+    }
+
     function invitationAfter(invitationId) {
       return getAfter(
         /databases/$(database)/documents/invitations/$(invitationId)
@@ -26,6 +31,28 @@ service cloud.firestore {
       return get(
         /databases/$(database)/documents/conversations/$(conversationId)
       ).data;
+    }
+
+    function validMessageExpiry(conversationId) {
+      let seconds = request.resource.data.retentionSeconds;
+      let configured = conversation(conversationId).get(
+        'messageRetentionSeconds',
+        0
+      );
+      return validRetentionSeconds(seconds)
+        && seconds == configured
+        && (
+          (seconds == 0 && request.resource.data.expiresAt == null)
+          ||
+          (
+            seconds > 0
+            && request.resource.data.expiresAt is timestamp
+            && request.resource.data.expiresAt
+              >= request.time + duration.value(seconds - 300, 's')
+            && request.resource.data.expiresAt
+              <= request.time + duration.value(seconds + 300, 's')
+          )
+        );
     }
 
     function validContactCreate(ownerUid, contactUid) {
@@ -211,7 +238,18 @@ service cloud.firestore {
           )
         ).data.conversationId == conversationId;
 
-      allow update, delete: if false;
+      allow update: if signedIn()
+        && request.auth.uid in resource.data.participantIds
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly([
+          'messageRetentionSeconds',
+          'retentionUpdatedAt',
+          'retentionUpdatedBy'
+        ])
+        && validRetentionSeconds(request.resource.data.messageRetentionSeconds)
+        && request.resource.data.retentionUpdatedAt == request.time
+        && request.resource.data.retentionUpdatedBy == request.auth.uid;
+
+      allow delete: if false;
 
       match /messages/{messageId} {
         allow read: if signedIn()
@@ -222,7 +260,9 @@ service cloud.firestore {
           && request.resource.data.keys().hasOnly([
             'body',
             'createdAt',
+            'expiresAt',
             'kind',
+            'retentionSeconds',
             'senderUid'
           ])
           && request.resource.data.senderUid == request.auth.uid
@@ -230,7 +270,8 @@ service cloud.firestore {
           && request.resource.data.body is string
           && request.resource.data.body.size() >= 1
           && request.resource.data.body.size() <= 4000
-          && request.resource.data.createdAt == request.time;
+          && request.resource.data.createdAt == request.time
+          && validMessageExpiry(conversationId);
 
         allow update, delete: if false;
       }

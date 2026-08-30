@@ -36,6 +36,7 @@ jest.mock('@react-native-firebase/firestore', () => ({
   runTransaction: jest.fn(),
   serverTimestamp: jest.fn(),
   setDoc: jest.fn(),
+  updateDoc: jest.fn(),
 }));
 
 import App from '../App';

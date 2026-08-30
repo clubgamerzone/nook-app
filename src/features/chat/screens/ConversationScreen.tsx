@@ -1,16 +1,40 @@
 import React, {useRef, useState} from 'react';
-import {FlatList, KeyboardAvoidingView, Platform, Pressable, StyleSheet, Text, TextInput, View} from 'react-native';
+import {
+  FlatList,
+  KeyboardAvoidingView,
+  Modal,
+  Platform,
+  Pressable,
+  StyleSheet,
+  Text,
+  TextInput,
+  View,
+} from 'react-native';
 import {useSafeAreaInsets} from 'react-native-safe-area-context';
 
 import {colors} from '../../../theme/colors';
-import type {ChatMessage, Conversation} from '../domain/models';
+import type {ChatMessage, Conversation, MessageRetentionSeconds} from '../domain/models';
+
+const RETENTION_OPTIONS: Array<{label: string; value: MessageRetentionSeconds}> = [
+  {label: '24 hours', value: 86400},
+  {label: '3 days', value: 259200},
+  {label: '7 days', value: 604800},
+  {label: '30 days', value: 2592000},
+  {label: 'Never', value: 0},
+];
+
+function retentionLabel(value: MessageRetentionSeconds) {
+  return RETENTION_OPTIONS.find(option => option.value === value)?.label ?? 'Never';
+}
 
 type Props = {
   conversation: Conversation;
   error?: string;
   messages: ChatMessage[];
   onBack: () => void;
+  onChangeRetention: (seconds: MessageRetentionSeconds) => Promise<void>;
   onSend: (body: string) => Promise<void>;
+  retentionSeconds: MessageRetentionSeconds;
 };
 
 function formatMessageTime(iso: string) {
@@ -20,10 +44,32 @@ function formatMessageTime(iso: string) {
   }).format(new Date(iso));
 }
 
-export function ConversationScreen({conversation, error, messages, onBack, onSend}: Props) {
+export function ConversationScreen({
+  conversation,
+  error,
+  messages,
+  onBack,
+  onChangeRetention,
+  onSend,
+  retentionSeconds,
+}: Props) {
   const insets = useSafeAreaInsets();
   const listRef = useRef<FlatList<ChatMessage>>(null);
   const [draft, setDraft] = useState('');
+  const [showRetention, setShowRetention] = useState(false);
+  const [changingRetention, setChangingRetention] = useState(false);
+
+  const chooseRetention = async (seconds: MessageRetentionSeconds) => {
+    setChangingRetention(true);
+    try {
+      await onChangeRetention(seconds);
+      setShowRetention(false);
+    } catch {
+      setShowRetention(false);
+    } finally {
+      setChangingRetention(false);
+    }
+  };
 
   const submit = async () => {
     const body = draft.trim();
@@ -54,9 +100,13 @@ export function ConversationScreen({conversation, error, messages, onBack, onSen
             <Text style={styles.name}>{conversation.contactName}</Text>
             {conversation.verified ? <Text style={styles.verified}>✓</Text> : null}
           </View>
-          <Text style={styles.status}>Identity verified</Text>
+          <Text style={styles.status}>Disappearing messages: {retentionLabel(retentionSeconds)}</Text>
         </View>
-        <Pressable accessibilityRole="button" style={styles.moreButton}>
+        <Pressable
+          accessibilityLabel="Conversation settings"
+          accessibilityRole="button"
+          onPress={() => setShowRetention(true)}
+          style={styles.moreButton}>
           <Text style={styles.moreText}>•••</Text>
         </Pressable>
       </View>
@@ -120,6 +170,34 @@ export function ConversationScreen({conversation, error, messages, onBack, onSen
           <Text style={styles.sendText}>↑</Text>
         </Pressable>
       </View>
+
+      <Modal animationType="fade" onRequestClose={() => setShowRetention(false)} transparent visible={showRetention}>
+        <Pressable onPress={() => setShowRetention(false)} style={styles.modalBackdrop}>
+          <Pressable onPress={() => undefined} style={styles.retentionCard}>
+            <Text style={styles.retentionTitle}>Disappearing messages</Text>
+            <Text style={styles.retentionHelp}>
+              This applies to new messages. Older messages keep their original lifetime.
+            </Text>
+            {RETENTION_OPTIONS.map(option => {
+              const selected = option.value === retentionSeconds;
+              return (
+                <Pressable
+                  accessibilityRole="radio"
+                  accessibilityState={{checked: selected, disabled: changingRetention}}
+                  disabled={changingRetention}
+                  key={option.value}
+                  onPress={() => chooseRetention(option.value)}
+                  style={[styles.retentionOption, selected && styles.retentionOptionSelected]}>
+                  <Text style={[styles.retentionOptionText, selected && styles.retentionOptionTextSelected]}>
+                    {option.label}
+                  </Text>
+                  <Text style={styles.retentionCheck}>{selected ? '✓' : ''}</Text>
+                </Pressable>
+              );
+            })}
+          </Pressable>
+        </Pressable>
+      </Modal>
     </KeyboardAvoidingView>
   );
 }
@@ -227,4 +305,32 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     lineHeight: 27,
   },
+  modalBackdrop: {
+    backgroundColor: 'rgba(12, 25, 20, 0.55)',
+    flex: 1,
+    justifyContent: 'flex-end',
+  },
+  retentionCard: {
+    backgroundColor: colors.surface,
+    borderTopLeftRadius: 24,
+    borderTopRightRadius: 24,
+    padding: 22,
+    paddingBottom: 34,
+  },
+  retentionTitle: {color: colors.text, fontSize: 20, fontWeight: '800'},
+  retentionHelp: {color: colors.textMuted, fontSize: 13, lineHeight: 19, marginBottom: 14, marginTop: 7},
+  retentionOption: {
+    alignItems: 'center',
+    borderColor: colors.border,
+    borderRadius: 12,
+    borderWidth: 1,
+    flexDirection: 'row',
+    marginTop: 8,
+    paddingHorizontal: 15,
+    paddingVertical: 13,
+  },
+  retentionOptionSelected: {backgroundColor: colors.sageLight, borderColor: colors.sage},
+  retentionOptionText: {color: colors.text, flex: 1, fontSize: 15, fontWeight: '600'},
+  retentionOptionTextSelected: {color: colors.inkSoft, fontWeight: '800'},
+  retentionCheck: {color: colors.inkSoft, fontSize: 16, fontWeight: '900'},
 });
