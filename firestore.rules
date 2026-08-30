@@ -273,7 +273,9 @@ service cloud.firestore {
           && request.resource.data.createdAt == request.time
           && validMessageExpiry(conversationId);
 
-        allow update, delete: if false;
+        allow update: if false;
+        allow delete: if signedIn()
+          && request.auth.uid in conversation(conversationId).participantIds;
       }
     }
 

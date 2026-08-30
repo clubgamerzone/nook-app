@@ -1,5 +1,6 @@
 import React, {useRef, useState} from 'react';
 import {
+  Alert,
   FlatList,
   KeyboardAvoidingView,
   Modal,
@@ -33,6 +34,7 @@ type Props = {
   messages: ChatMessage[];
   onBack: () => void;
   onChangeRetention: (seconds: MessageRetentionSeconds) => Promise<void>;
+  onClearChat: () => Promise<void>;
   onSend: (body: string) => Promise<void>;
   retentionSeconds: MessageRetentionSeconds;
 };
@@ -50,6 +52,7 @@ export function ConversationScreen({
   messages,
   onBack,
   onChangeRetention,
+  onClearChat,
   onSend,
   retentionSeconds,
 }: Props) {
@@ -58,6 +61,7 @@ export function ConversationScreen({
   const [draft, setDraft] = useState('');
   const [showRetention, setShowRetention] = useState(false);
   const [changingRetention, setChangingRetention] = useState(false);
+  const [clearingChat, setClearingChat] = useState(false);
 
   const chooseRetention = async (seconds: MessageRetentionSeconds) => {
     setChangingRetention(true);
@@ -69,6 +73,29 @@ export function ConversationScreen({
     } finally {
       setChangingRetention(false);
     }
+  };
+
+  const clearChat = async () => {
+    setClearingChat(true);
+    try {
+      await onClearChat();
+    } catch {
+      // The synchronized error banner explains the failure.
+    } finally {
+      setClearingChat(false);
+    }
+  };
+
+  const confirmClearChat = () => {
+    setShowRetention(false);
+    Alert.alert(
+      'Clear the entire chat?',
+      'Every message will be permanently removed for both people. Your connection will remain.',
+      [
+        {style: 'cancel', text: 'Cancel'},
+        {onPress: clearChat, style: 'destructive', text: 'Clear chat'},
+      ],
+    );
   };
 
   const submit = async () => {
@@ -195,6 +222,17 @@ export function ConversationScreen({
                 </Pressable>
               );
             })}
+            <View style={styles.destructiveDivider} />
+            <Pressable
+              accessibilityRole="button"
+              disabled={clearingChat}
+              onPress={confirmClearChat}
+              style={styles.clearChatButton}>
+              <Text style={styles.clearChatText}>{clearingChat ? 'Clearing chat…' : 'Clear entire chat'}</Text>
+            </Pressable>
+            <Text style={styles.clearChatHelp}>
+              Keeps this person connected, but deletes all messages for both people.
+            </Text>
           </Pressable>
         </Pressable>
       </Modal>
@@ -333,4 +371,14 @@ const styles = StyleSheet.create({
   retentionOptionText: {color: colors.text, flex: 1, fontSize: 15, fontWeight: '600'},
   retentionOptionTextSelected: {color: colors.inkSoft, fontWeight: '800'},
   retentionCheck: {color: colors.inkSoft, fontSize: 16, fontWeight: '900'},
+  destructiveDivider: {backgroundColor: colors.border, height: 1, marginVertical: 18},
+  clearChatButton: {
+    alignItems: 'center',
+    borderColor: '#B94747',
+    borderRadius: 12,
+    borderWidth: 1,
+    paddingVertical: 13,
+  },
+  clearChatText: {color: '#A94343', fontSize: 14, fontWeight: '800'},
+  clearChatHelp: {color: colors.textMuted, fontSize: 11, lineHeight: 17, marginTop: 8, textAlign: 'center'},
 });

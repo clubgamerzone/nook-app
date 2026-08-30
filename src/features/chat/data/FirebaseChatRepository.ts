@@ -3,6 +3,7 @@ import {
   collection,
   doc,
   getDoc,
+  getDocs,
   getFirestore,
   limit,
   onSnapshot,
@@ -11,11 +12,13 @@ import {
   serverTimestamp,
   Timestamp,
   updateDoc,
+  writeBatch,
 } from '@react-native-firebase/firestore';
 
 import type {ChatMessage, MessageRetentionSeconds} from '../domain/models';
 
 const MESSAGE_LIMIT = 200;
+const DELETE_BATCH_SIZE = 200;
 
 /** Development-only plaintext transport. Replace bodies with audited ciphertext before release. */
 export class FirebaseChatRepository {
@@ -93,6 +96,22 @@ export class FirebaseChatRepository {
       retentionUpdatedAt: serverTimestamp(),
       retentionUpdatedBy: currentUid,
     });
+  }
+
+  async clearMessages(conversationId: string) {
+    const database = getFirestore();
+    const messages = collection(database, 'conversations', conversationId, 'messages');
+
+    while (true) {
+      const snapshot = await getDocs(query(messages, limit(DELETE_BATCH_SIZE)));
+      if (snapshot.empty) {
+        return;
+      }
+
+      const batch = writeBatch(database);
+      snapshot.docs.forEach(messageSnapshot => batch.delete(messageSnapshot.ref));
+      await batch.commit();
+    }
   }
 
   async sendText(conversationId: string, currentUid: string, body: string) {

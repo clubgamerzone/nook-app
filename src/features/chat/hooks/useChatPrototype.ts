@@ -73,9 +73,23 @@ export function useChatPrototype(conversations: Conversation[], currentUid: stri
     [activeConversation, currentUid, repository],
   );
 
+  const clearChat = useCallback(async () => {
+    if (!activeConversation) {
+      return;
+    }
+    setMessageError(undefined);
+    try {
+      await repository.clearMessages(activeConversation.id);
+    } catch {
+      setMessageError('The chat could not be cleared. Check your connection and try again.');
+      throw new Error('chat-clear-failed');
+    }
+  }, [activeConversation, repository]);
+
   return {
     activeConversation,
     changeRetention,
+    clearChat,
     closeConversation,
     conversations,
     messageError,

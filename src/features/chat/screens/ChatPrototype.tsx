@@ -65,6 +65,7 @@ export function ChatPrototype({accountEmail, onSignOut, profile}: Props) {
         messages={chat.messages}
         onBack={chat.closeConversation}
         onChangeRetention={chat.changeRetention}
+        onClearChat={chat.clearChat}
         onSend={chat.sendMessage}
         retentionSeconds={chat.retentionSeconds}
       />

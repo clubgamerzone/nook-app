@@ -10,6 +10,7 @@ has been validated.
 - Conversation list and one-to-one text conversation UI
 - Realtime Firestore message transport for connected test users
 - Conversation-wide disappearing messages: 24 hours, 3 days, 7 days, 30 days, or never
+- Confirmed whole-chat clearing that removes messages for both people without removing the contact
 - Typed repository and cryptography boundaries
 - Firebase email/password account gate
 - Native Firebase Authentication and Firestore modules
