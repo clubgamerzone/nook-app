@@ -33,8 +33,11 @@ type Props = {
   error?: string;
   messages: ChatMessage[];
   onBack: () => void;
+  onBlock: () => Promise<void>;
   onChangeRetention: (seconds: MessageRetentionSeconds) => Promise<void>;
   onClearChat: () => Promise<void>;
+  onRemove: () => Promise<void>;
+  onReport: (reason: string) => Promise<void>;
   onSend: (body: string) => Promise<void>;
   retentionSeconds: MessageRetentionSeconds;
 };
@@ -51,8 +54,11 @@ export function ConversationScreen({
   error,
   messages,
   onBack,
+  onBlock,
   onChangeRetention,
   onClearChat,
+  onRemove,
+  onReport,
   onSend,
   retentionSeconds,
 }: Props) {
@@ -62,6 +68,7 @@ export function ConversationScreen({
   const [showRetention, setShowRetention] = useState(false);
   const [changingRetention, setChangingRetention] = useState(false);
   const [clearingChat, setClearingChat] = useState(false);
+  const [safetyBusy, setSafetyBusy] = useState(false);
 
   const chooseRetention = async (seconds: MessageRetentionSeconds) => {
     setChangingRetention(true);
@@ -94,6 +101,59 @@ export function ConversationScreen({
       [
         {style: 'cancel', text: 'Cancel'},
         {onPress: clearChat, style: 'destructive', text: 'Clear chat'},
+      ],
+    );
+  };
+
+  const runSafetyAction = async (action: () => Promise<void>) => {
+    setSafetyBusy(true);
+    try {
+      await action();
+    } finally {
+      setSafetyBusy(false);
+    }
+  };
+
+  const confirmBlock = () => {
+    setShowRetention(false);
+    Alert.alert(
+      conversation.blocked ? `Unblock ${conversation.contactName}?` : `Block ${conversation.contactName}?`,
+      conversation.blocked
+        ? 'They will be able to send messages again.'
+        : 'They will no longer be able to send messages to you. You can unblock them later.',
+      [
+        {style: 'cancel', text: 'Cancel'},
+        {
+          onPress: () => runSafetyAction(onBlock),
+          style: conversation.blocked ? 'default' : 'destructive',
+          text: conversation.blocked ? 'Unblock' : 'Block',
+        },
+      ],
+    );
+  };
+
+  const confirmRemove = () => {
+    setShowRetention(false);
+    Alert.alert(
+      'Remove this connection?',
+      'The conversation disappears from your list and neither person can send new messages through this connection.',
+      [
+        {style: 'cancel', text: 'Cancel'},
+        {onPress: () => runSafetyAction(onRemove), style: 'destructive', text: 'Remove'},
+      ],
+    );
+  };
+
+  const chooseReportReason = () => {
+    setShowRetention(false);
+    Alert.alert(
+      'Report this contact',
+      'Choose the reason. Nook sends account and conversation references, but not message text.',
+      [
+        {style: 'cancel', text: 'Cancel'},
+        {onPress: () => runSafetyAction(() => onReport('spam')), text: 'Spam or scam'},
+        {onPress: () => runSafetyAction(() => onReport('harassment')), text: 'Harassment'},
+        {onPress: () => runSafetyAction(() => onReport('threats')), text: 'Threats or safety'},
       ],
     );
   };
@@ -141,6 +201,11 @@ export function ConversationScreen({
       <View style={styles.encryptionNotice}>
         <Text style={styles.noticeText}>Encryption adapter not connected — development UI</Text>
       </View>
+      {conversation.blocked ? (
+        <View style={styles.blockedNotice}>
+          <Text style={styles.blockedNoticeText}>You blocked this contact. New messages are disabled.</Text>
+        </View>
+      ) : null}
 
       <FlatList
         ref={listRef}
@@ -177,9 +242,10 @@ export function ConversationScreen({
       <View style={[styles.composer, {paddingBottom: Math.max(insets.bottom, 12)}]}>
         <TextInput
           accessibilityLabel="Message"
+          editable={!conversation.blocked}
           multiline
           onChangeText={setDraft}
-          placeholder="Write a private message"
+          placeholder={conversation.blocked ? 'Contact blocked' : 'Write a private message'}
           placeholderTextColor={colors.textMuted}
           style={styles.input}
           value={draft}
@@ -187,11 +253,11 @@ export function ConversationScreen({
         <Pressable
           accessibilityRole="button"
           accessibilityLabel="Send message"
-          disabled={!draft.trim()}
+          disabled={!draft.trim() || conversation.blocked}
           onPress={submit}
           style={({pressed}) => [
             styles.sendButton,
-            !draft.trim() && styles.sendDisabled,
+            (!draft.trim() || conversation.blocked) && styles.sendDisabled,
             pressed && styles.sendPressed,
           ]}>
           <Text style={styles.sendText}>↑</Text>
@@ -233,6 +299,16 @@ export function ConversationScreen({
             <Text style={styles.clearChatHelp}>
               Keeps this person connected, but deletes all messages for both people.
             </Text>
+            <View style={styles.destructiveDivider} />
+            <Pressable disabled={safetyBusy} onPress={confirmBlock} style={styles.safetyButton}>
+              <Text style={styles.safetyText}>{conversation.blocked ? 'Unblock contact' : 'Block contact'}</Text>
+            </Pressable>
+            <Pressable disabled={safetyBusy} onPress={chooseReportReason} style={styles.safetyButton}>
+              <Text style={styles.safetyText}>Report contact</Text>
+            </Pressable>
+            <Pressable disabled={safetyBusy} onPress={confirmRemove} style={styles.removeButton}>
+              <Text style={styles.removeText}>Remove connection</Text>
+            </Pressable>
           </Pressable>
         </Pressable>
       </Modal>
@@ -275,6 +351,8 @@ const styles = StyleSheet.create({
     paddingVertical: 8,
   },
   noticeText: {color: colors.warning, fontSize: 11, fontWeight: '700'},
+  blockedNotice: {backgroundColor: '#F7E8E5', paddingHorizontal: 16, paddingVertical: 8},
+  blockedNoticeText: {color: '#923E38', fontSize: 11, fontWeight: '700', textAlign: 'center'},
   messages: {flexGrow: 1, paddingHorizontal: 14, paddingVertical: 20},
   error: {
     backgroundColor: '#FCE8E8',
@@ -354,6 +432,7 @@ const styles = StyleSheet.create({
     borderTopRightRadius: 24,
     padding: 22,
     paddingBottom: 34,
+    maxHeight: '94%',
   },
   retentionTitle: {color: colors.text, fontSize: 20, fontWeight: '800'},
   retentionHelp: {color: colors.textMuted, fontSize: 13, lineHeight: 19, marginBottom: 14, marginTop: 7},
@@ -381,4 +460,15 @@ const styles = StyleSheet.create({
   },
   clearChatText: {color: '#A94343', fontSize: 14, fontWeight: '800'},
   clearChatHelp: {color: colors.textMuted, fontSize: 11, lineHeight: 17, marginTop: 8, textAlign: 'center'},
+  safetyButton: {
+    alignItems: 'center',
+    borderColor: colors.border,
+    borderRadius: 12,
+    borderWidth: 1,
+    marginTop: 8,
+    paddingVertical: 12,
+  },
+  safetyText: {color: colors.inkSoft, fontSize: 13, fontWeight: '800'},
+  removeButton: {alignItems: 'center', marginTop: 8, paddingVertical: 12},
+  removeText: {color: '#A94343', fontSize: 13, fontWeight: '800'},
 });

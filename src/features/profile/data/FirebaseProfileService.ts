@@ -1,27 +1,15 @@
-import {
-  doc,
-  getFirestore,
-  onSnapshot,
-  serverTimestamp,
-  setDoc,
-} from '@react-native-firebase/firestore';
+import {doc, getFirestore, onSnapshot, serverTimestamp, setDoc} from '@react-native-firebase/firestore';
 
 import type {UserProfile} from '../domain/models';
 
 export class FirebaseProfileService {
-  subscribe(
-    uid: string,
-    listener: (profile: UserProfile | null) => void,
-    onError: (error: Error) => void,
-  ) {
+  subscribe(uid: string, listener: (profile: UserProfile | null) => void, onError: (error: Error) => void) {
     return onSnapshot(
       doc(getFirestore(), 'users', uid),
       snapshot => {
         const data = snapshot.data();
         listener(
-          snapshot.exists() && typeof data?.displayName === 'string'
-            ? {uid, displayName: data.displayName}
-            : null,
+          snapshot.exists() && typeof data?.displayName === 'string' ? {uid, displayName: data.displayName} : null,
         );
       },
       onError,

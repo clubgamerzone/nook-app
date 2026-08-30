@@ -1,13 +1,5 @@
 import React, {useState} from 'react';
-import {
-  KeyboardAvoidingView,
-  Platform,
-  Pressable,
-  StyleSheet,
-  Text,
-  TextInput,
-  View,
-} from 'react-native';
+import {KeyboardAvoidingView, Platform, Pressable, StyleSheet, Text, TextInput, View} from 'react-native';
 import {useSafeAreaInsets} from 'react-native-safe-area-context';
 
 import {colors} from '../../../theme/colors';
@@ -65,15 +57,11 @@ export function AuthScreen({onCreateAccount, onSignIn}: Props) {
   };
 
   return (
-    <KeyboardAvoidingView
-      behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-      style={styles.screen}>
+    <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined} style={styles.screen}>
       <View style={[styles.hero, {paddingTop: insets.top + 34}]}>
         <Text style={styles.eyebrow}>NOOK</Text>
         <Text style={styles.title}>Your private space.</Text>
-        <Text style={styles.subtitle}>
-          Sign in to reach the conversations shared only with people you accept.
-        </Text>
+        <Text style={styles.subtitle}>Sign in to reach the conversations shared only with people you accept.</Text>
       </View>
 
       <View style={[styles.form, {paddingBottom: Math.max(insets.bottom, 24)}]}>
@@ -81,16 +69,12 @@ export function AuthScreen({onCreateAccount, onSignIn}: Props) {
           <Pressable
             onPress={() => setMode('signIn')}
             style={[styles.modeButton, mode === 'signIn' && styles.modeActive]}>
-            <Text style={[styles.modeText, mode === 'signIn' && styles.modeTextActive]}>
-              Sign in
-            </Text>
+            <Text style={[styles.modeText, mode === 'signIn' && styles.modeTextActive]}>Sign in</Text>
           </Pressable>
           <Pressable
             onPress={() => setMode('create')}
             style={[styles.modeButton, mode === 'create' && styles.modeActive]}>
-            <Text style={[styles.modeText, mode === 'create' && styles.modeTextActive]}>
-              Create account
-            </Text>
+            <Text style={[styles.modeText, mode === 'create' && styles.modeTextActive]}>Create account</Text>
           </Pressable>
         </View>
 
@@ -122,18 +106,13 @@ export function AuthScreen({onCreateAccount, onSignIn}: Props) {
           accessibilityRole="button"
           disabled={submitting}
           onPress={submit}
-          style={({pressed}) => [
-            styles.submit,
-            (pressed || submitting) && styles.submitPressed,
-          ]}>
+          style={({pressed}) => [styles.submit, (pressed || submitting) && styles.submitPressed]}>
           <Text style={styles.submitText}>
             {submitting ? 'Please wait…' : mode === 'create' ? 'Create account' : 'Continue'}
           </Text>
         </Pressable>
 
-        <Text style={styles.privacyNote}>
-          Your account signs you in. It will not be used as an encryption key.
-        </Text>
+        <Text style={styles.privacyNote}>Your account signs you in. It will not be used as an encryption key.</Text>
       </View>
     </KeyboardAvoidingView>
   );

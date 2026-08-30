@@ -33,6 +33,16 @@ service cloud.firestore {
       ).data;
     }
 
+    function activeRelationship(conversationId) {
+      let participants = conversation(conversationId).participantIds;
+      let firstPath = /databases/$(database)/documents/users/$(participants[0])/contacts/$(participants[1]);
+      let secondPath = /databases/$(database)/documents/users/$(participants[1])/contacts/$(participants[0]);
+      return exists(firstPath)
+        && exists(secondPath)
+        && get(firstPath).data.get('blocked', false) == false
+        && get(secondPath).data.get('blocked', false) == false;
+    }
+
     function validMessageExpiry(conversationId) {
       let seconds = request.resource.data.retentionSeconds;
       let configured = conversation(conversationId).get(
@@ -125,7 +135,18 @@ service cloud.firestore {
       match /contacts/{contactUid} {
         allow read: if signedIn() && request.auth.uid == uid;
         allow create: if validContactCreate(uid, contactUid);
-        allow update, delete: if false;
+        allow update: if signedIn()
+          && request.auth.uid == uid
+          && request.resource.data.diff(resource.data).affectedKeys().hasOnly([
+            'blocked',
+            'blockedAt'
+          ])
+          && request.resource.data.blocked is bool
+          && (
+            (request.resource.data.blocked && request.resource.data.blockedAt == request.time)
+            || (!request.resource.data.blocked && request.resource.data.blockedAt == null)
+          );
+        allow delete: if signedIn() && request.auth.uid == uid;
       }
     }
 
@@ -257,6 +278,7 @@ service cloud.firestore {
 
         allow create: if signedIn()
           && request.auth.uid in conversation(conversationId).participantIds
+          && activeRelationship(conversationId)
           && request.resource.data.keys().hasOnly([
             'body',
             'createdAt',
@@ -277,6 +299,27 @@ service cloud.firestore {
         allow delete: if signedIn()
           && request.auth.uid in conversation(conversationId).participantIds;
       }
+    }
+
+    match /reports/{reportId} {
+      allow create: if signedIn()
+        && request.resource.data.keys().hasOnly([
+          'conversationId',
+          'createdAt',
+          'reason',
+          'reportedUid',
+          'reporterUid',
+          'status'
+        ])
+        && request.resource.data.reporterUid == request.auth.uid
+        && request.resource.data.reportedUid != request.auth.uid
+        && request.resource.data.reason in ['spam', 'harassment', 'threats']
+        && request.resource.data.status == 'received'
+        && request.resource.data.createdAt == request.time
+        && request.auth.uid in conversation(request.resource.data.conversationId).participantIds
+        && request.resource.data.reportedUid in conversation(request.resource.data.conversationId).participantIds;
+      allow read: if signedIn() && resource.data.reporterUid == request.auth.uid;
+      allow update, delete: if false;
     }
 
     match /{document=**} {

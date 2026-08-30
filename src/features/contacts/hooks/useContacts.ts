@@ -1,4 +1,4 @@
-import {useEffect, useMemo, useState} from 'react';
+import {useCallback, useEffect, useMemo, useState} from 'react';
 
 import {FirebaseContactService} from '../data/FirebaseContactService';
 import type {Contact} from '../domain/models';
@@ -26,5 +26,16 @@ export function useContacts(uid: string) {
     [service, uid],
   );
 
-  return {contacts, error, loading};
+  const setBlocked = useCallback(
+    (contactUid: string, blocked: boolean) => service.setBlocked(uid, contactUid, blocked),
+    [service, uid],
+  );
+  const remove = useCallback((contactUid: string) => service.remove(uid, contactUid), [service, uid]);
+  const report = useCallback(
+    (contactUid: string, conversationId: string, reason: string) =>
+      service.report(uid, contactUid, conversationId, reason),
+    [service, uid],
+  );
+
+  return {contacts, error, loading, remove, report, setBlocked};
 }

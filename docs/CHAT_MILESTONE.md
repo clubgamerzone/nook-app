@@ -1,8 +1,7 @@
-# Nook chat-first milestone
+# Nook integrated beta milestone
 
-Nook development starts with the invitation-only private messaging vertical
-slice. Organizer functionality will be added after the messaging architecture
-has been validated.
+Nook began with the invitation-only private messaging vertical slice and now
+uses the organizer-first information architecture from the product specification.
 
 ## Current implementation
 
@@ -11,6 +10,11 @@ has been validated.
 - Realtime Firestore message transport for connected test users
 - Conversation-wide disappearing messages: 24 hours, 3 days, 7 days, 30 days, or never
 - Confirmed whole-chat clearing that removes messages for both people without removing the contact
+- Local-first Today, Agenda, reminders, medicine schedules, appointments, and notes
+- Device-local organizer alerts with daily and weekly repeat support
+- Settings-only Private Space entry with local PIN, optional biometrics, retry delays, and background locking
+- Neutral app-switcher cover and Android screenshot blocking in Private Space
+- Block, report, remove-contact, and in-app account deletion flows
 - Typed repository and cryptography boundaries
 - Firebase email/password account gate
 - Native Firebase Authentication and Firestore modules
@@ -76,10 +80,10 @@ field is declared as the Firestore TTL field so the server can permanently
 remove them asynchronously once that policy is activated; `null` means that a
 message never expires.
 
-## Next milestone
+## Production security milestone
 
 1. Create separate development and production Firebase projects.
 2. Keep Firebase Authentication optional for the future local-only organizer.
 3. Prove the native libsignal adapter on both platforms.
 4. Store and synchronize only ciphertext message envelopes in Firestore.
-5. Add deep-link and in-app QR scanning for the existing invitation codes.
+5. Add encrypted voice transport only after the audited session layer is operational.

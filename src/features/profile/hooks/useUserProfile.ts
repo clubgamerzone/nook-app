@@ -26,10 +26,7 @@ export function useUserProfile(uid: string) {
     [service, uid],
   );
 
-  const createProfile = useCallback(
-    (displayName: string) => service.create(uid, displayName),
-    [service, uid],
-  );
+  const createProfile = useCallback((displayName: string) => service.create(uid, displayName), [service, uid]);
 
   return {createProfile, error, loading, profile};
 }

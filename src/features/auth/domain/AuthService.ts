@@ -6,6 +6,7 @@ export type AuthUser = {
 export interface AuthService {
   subscribe(listener: (user: AuthUser | null) => void): () => void;
   createAccount(email: string, password: string): Promise<void>;
+  deleteAccount(password: string): Promise<void>;
   signIn(email: string, password: string): Promise<void>;
   signOut(): Promise<void>;
 }

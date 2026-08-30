@@ -1,13 +1,5 @@
 import React, {useState} from 'react';
-import {
-  KeyboardAvoidingView,
-  Platform,
-  Pressable,
-  StyleSheet,
-  Text,
-  TextInput,
-  View,
-} from 'react-native';
+import {KeyboardAvoidingView, Platform, Pressable, StyleSheet, Text, TextInput, View} from 'react-native';
 import {useSafeAreaInsets} from 'react-native-safe-area-context';
 
 import {colors} from '../../../theme/colors';
@@ -44,15 +36,11 @@ export function CreateProfileScreen({accountEmail, initialError, onCreate, onSig
   };
 
   return (
-    <KeyboardAvoidingView
-      behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-      style={styles.screen}>
+    <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined} style={styles.screen}>
       <View style={[styles.hero, {paddingTop: insets.top + 36}]}>
         <Text style={styles.eyebrow}>YOUR NOOK</Text>
         <Text style={styles.title}>What should your people call you?</Text>
-        <Text style={styles.subtitle}>
-          This name appears only on invitations and to contacts you accept.
-        </Text>
+        <Text style={styles.subtitle}>This name appears only on invitations and to contacts you accept.</Text>
       </View>
 
       <View style={[styles.form, {paddingBottom: Math.max(insets.bottom, 24)}]}>
@@ -75,10 +63,7 @@ export function CreateProfileScreen({accountEmail, initialError, onCreate, onSig
           accessibilityRole="button"
           disabled={submitting}
           onPress={submit}
-          style={({pressed}) => [
-            styles.submit,
-            (pressed || submitting) && styles.pressed,
-          ]}>
+          style={({pressed}) => [styles.submit, (pressed || submitting) && styles.pressed]}>
           <Text style={styles.submitText}>{submitting ? 'Saving…' : 'Continue'}</Text>
         </Pressable>
 

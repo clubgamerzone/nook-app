@@ -13,6 +13,7 @@ import {ConversationScreen} from './ConversationScreen';
 
 type Props = {
   accountEmail: string | null;
+  onExit: () => void;
   onSignOut: () => Promise<void>;
   profile: UserProfile;
 };
@@ -26,15 +27,17 @@ function initials(name: string) {
     .join('');
 }
 
-export function ChatPrototype({accountEmail, onSignOut, profile}: Props) {
+export function ChatPrototype({accountEmail, onExit, onSignOut, profile}: Props) {
   const insets = useSafeAreaInsets();
   const contacts = useContacts(profile.uid);
   const [showInvitations, setShowInvitations] = useState(false);
   const conversations = useMemo<Conversation[]>(
     () =>
       contacts.contacts.map(contact => ({
+        blocked: contact.blocked,
         contactInitials: initials(contact.displayName),
         contactName: contact.displayName,
+        contactUid: contact.contactUid,
         id: contact.conversationId,
         lastMessage: 'Private connection ready',
         lastMessageAt: contact.acceptedAt,
@@ -66,6 +69,15 @@ export function ChatPrototype({accountEmail, onSignOut, profile}: Props) {
         onBack={chat.closeConversation}
         onChangeRetention={chat.changeRetention}
         onClearChat={chat.clearChat}
+        onBlock={async () => {
+          await contacts.setBlocked(chat.activeConversation!.contactUid, !chat.activeConversation!.blocked);
+          chat.closeConversation();
+        }}
+        onRemove={async () => {
+          await contacts.remove(chat.activeConversation!.contactUid);
+          chat.closeConversation();
+        }}
+        onReport={reason => contacts.report(chat.activeConversation!.contactUid, chat.activeConversation!.id, reason)}
         onSend={chat.sendMessage}
         retentionSeconds={chat.retentionSeconds}
       />
@@ -78,6 +90,7 @@ export function ChatPrototype({accountEmail, onSignOut, profile}: Props) {
       accountDisplayName={profile.displayName}
       conversations={chat.conversations}
       contactError={contacts.error}
+      onExit={onExit}
       onOpenConversation={chat.openConversation}
       onSignOut={onSignOut}
       onAddPerson={() => setShowInvitations(true)}

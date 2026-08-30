@@ -1,5 +1,6 @@
 export type Contact = {
   acceptedAt: string;
+  blocked: boolean;
   contactUid: string;
   conversationId: string;
   displayName: string;

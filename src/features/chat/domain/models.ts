@@ -13,6 +13,8 @@ export type ChatMessage = {
 export type MessageRetentionSeconds = 0 | 86400 | 259200 | 604800 | 2592000;
 
 export type Conversation = {
+  blocked: boolean;
+  contactUid: string;
   id: string;
   contactName: string;
   contactInitials: string;

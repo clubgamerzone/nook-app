@@ -70,10 +70,7 @@ export class FirebaseInvitationService {
       throw new Error('invite/not-found');
     }
 
-    const invitation = invitationFromSnapshot(
-      normalizedCode,
-      snapshot.data() as InvitationData,
-    );
+    const invitation = invitationFromSnapshot(normalizedCode, snapshot.data() as InvitationData);
     if (invitation.inviterUid === currentUid) {
       throw new Error('invite/own-code');
     }
@@ -84,20 +81,8 @@ export class FirebaseInvitationService {
     const database = getFirestore();
     const invitationRef = doc(database, 'invitations', invitation.code);
     const conversationRef = doc(database, 'conversations', invitation.code);
-    const inviterContactRef = doc(
-      database,
-      'users',
-      invitation.inviterUid,
-      'contacts',
-      profile.uid,
-    );
-    const recipientContactRef = doc(
-      database,
-      'users',
-      profile.uid,
-      'contacts',
-      invitation.inviterUid,
-    );
+    const inviterContactRef = doc(database, 'users', invitation.inviterUid, 'contacts', profile.uid);
+    const recipientContactRef = doc(database, 'users', profile.uid, 'contacts', invitation.inviterUid);
 
     await runTransaction(database, async transaction => {
       const snapshot = await transaction.get(invitationRef);
@@ -105,14 +90,8 @@ export class FirebaseInvitationService {
         throw new Error('invite/not-found');
       }
 
-      const currentInvitation = invitationFromSnapshot(
-        invitation.code,
-        snapshot.data() as InvitationData,
-      );
-      if (
-        currentInvitation.inviterUid !== invitation.inviterUid ||
-        currentInvitation.inviterUid === profile.uid
-      ) {
+      const currentInvitation = invitationFromSnapshot(invitation.code, snapshot.data() as InvitationData);
+      if (currentInvitation.inviterUid !== invitation.inviterUid || currentInvitation.inviterUid === profile.uid) {
         throw new Error('invite/not-available');
       }
 

@@ -22,12 +22,10 @@ export function useAuthSession() {
     [service],
   );
 
-  const signIn = useCallback(
-    (email: string, password: string) => service.signIn(email, password),
-    [service],
-  );
+  const signIn = useCallback((email: string, password: string) => service.signIn(email, password), [service]);
 
   const endSession = useCallback(() => service.signOut(), [service]);
+  const deleteAccount = useCallback((password: string) => service.deleteAccount(password), [service]);
 
-  return {createAccount, endSession, initializing, signIn, user};
+  return {createAccount, deleteAccount, endSession, initializing, signIn, user};
 }

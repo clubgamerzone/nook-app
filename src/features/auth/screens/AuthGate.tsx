@@ -21,7 +21,7 @@ export function AuthGate() {
     return <AuthScreen onCreateAccount={auth.createAccount} onSignIn={auth.signIn} />;
   }
 
-  return <ProfileGate onSignOut={auth.endSession} user={auth.user} />;
+  return <ProfileGate onDeleteAccount={auth.deleteAccount} onSignOut={auth.endSession} user={auth.user} />;
 }
 
 const styles = StyleSheet.create({

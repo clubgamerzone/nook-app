@@ -2,17 +2,18 @@ import React from 'react';
 import {ActivityIndicator, StyleSheet, Text, View} from 'react-native';
 
 import type {AuthUser} from '../../auth/domain/AuthService';
-import {ChatPrototype} from '../../chat/screens/ChatPrototype';
+import {OrganizerApp} from '../../organizer/screens/OrganizerApp';
 import {colors} from '../../../theme/colors';
 import {useUserProfile} from '../hooks/useUserProfile';
 import {CreateProfileScreen} from './CreateProfileScreen';
 
 type Props = {
+  onDeleteAccount: (password: string) => Promise<void>;
   onSignOut: () => Promise<void>;
   user: AuthUser;
 };
 
-export function ProfileGate({onSignOut, user}: Props) {
+export function ProfileGate({onDeleteAccount, onSignOut, user}: Props) {
   const profile = useUserProfile(user.uid);
 
   if (profile.loading) {
@@ -43,8 +44,9 @@ export function ProfileGate({onSignOut, user}: Props) {
   }
 
   return (
-    <ChatPrototype
+    <OrganizerApp
       accountEmail={user.email}
+      onDeleteAccount={onDeleteAccount}
       onSignOut={onSignOut}
       profile={profile.profile}
     />

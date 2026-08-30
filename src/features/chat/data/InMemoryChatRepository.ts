@@ -31,6 +31,8 @@ export class InMemoryChatRepository implements ChatRepository {
 
     return [
       {
+        blocked: false,
+        contactUid: 'alex-morgan',
         id: conversationId,
         contactName: 'Alex Morgan',
         contactInitials: 'AM',

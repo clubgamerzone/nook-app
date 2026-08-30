@@ -12,6 +12,7 @@ type Props = {
   conversations: Conversation[];
   contactError?: string;
   onAddPerson: () => void;
+  onExit: () => void;
   onOpenConversation: (conversation: Conversation) => void;
   onSignOut: () => Promise<void>;
 };
@@ -29,6 +30,7 @@ export function ConversationListScreen({
   conversations,
   contactError,
   onAddPerson,
+  onExit,
   onOpenConversation,
   onSignOut,
 }: Props) {
@@ -37,6 +39,13 @@ export function ConversationListScreen({
   return (
     <View style={styles.screen}>
       <View style={[styles.header, {paddingTop: insets.top + 22}]}>
+        <Pressable
+          accessibilityLabel="Return to organizer"
+          accessibilityRole="button"
+          onPress={onExit}
+          style={styles.exitButton}>
+          <Text style={styles.exitText}>‹ Organizer</Text>
+        </Pressable>
         <View style={styles.headerRow}>
           <View style={styles.heading}>
             <PrivacyBadge />
@@ -85,9 +94,7 @@ export function ConversationListScreen({
               {contactError ? 'Contacts unavailable' : 'Your private space is ready'}
             </Text>
             <Text style={styles.emptyText}>
-              {contactError
-                ? contactError
-                : 'Tap + to create an invitation or enter a code from someone you trust.'}
+              {contactError ? contactError : 'Tap + to create an invitation or enter a code from someone you trust.'}
             </Text>
           </View>
         }
@@ -95,9 +102,7 @@ export function ConversationListScreen({
           <View>
             <View style={styles.footerNote}>
               <Text style={styles.footerTitle}>Messages stay separate</Text>
-              <Text style={styles.footerText}>
-                Nook will lock this area whenever the app leaves the foreground.
-              </Text>
+              <Text style={styles.footerText}>Nook will lock this area whenever the app leaves the foreground.</Text>
             </View>
             <View style={styles.accountRow}>
               <Text numberOfLines={1} style={styles.accountText}>
@@ -128,6 +133,8 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
   },
+  exitButton: {alignSelf: 'flex-start', marginBottom: 15, paddingVertical: 4},
+  exitText: {color: '#B9C8C0', fontSize: 13, fontWeight: '800'},
   heading: {flex: 1},
   title: {color: colors.surface, fontSize: 31, fontWeight: '800', marginTop: 22},
   subtitle: {color: '#B9C8C0', fontSize: 14, marginTop: 7},
