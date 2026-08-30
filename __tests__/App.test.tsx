@@ -5,6 +5,8 @@
 import React from 'react';
 import ReactTestRenderer from 'react-test-renderer';
 
+jest.mock('react-native-qrcode-svg', () => 'QRCode');
+
 jest.mock('@react-native-firebase/auth', () => ({
   createUserWithEmailAndPassword: jest.fn(),
   getAuth: jest.fn(() => ({})),
@@ -17,6 +19,7 @@ jest.mock('@react-native-firebase/auth', () => ({
 }));
 
 jest.mock('@react-native-firebase/firestore', () => ({
+  addDoc: jest.fn(),
   Timestamp: class MockTimestamp {
     static fromDate(value: Date) {
       return {toDate: () => value};
@@ -26,7 +29,10 @@ jest.mock('@react-native-firebase/firestore', () => ({
   doc: jest.fn(),
   getDoc: jest.fn(),
   getFirestore: jest.fn(() => ({})),
+  limit: jest.fn(),
   onSnapshot: jest.fn(),
+  orderBy: jest.fn(),
+  query: jest.fn(),
   runTransaction: jest.fn(),
   serverTimestamp: jest.fn(),
   setDoc: jest.fn(),

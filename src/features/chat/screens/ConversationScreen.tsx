@@ -1,14 +1,5 @@
 import React, {useRef, useState} from 'react';
-import {
-  FlatList,
-  KeyboardAvoidingView,
-  Platform,
-  Pressable,
-  StyleSheet,
-  Text,
-  TextInput,
-  View,
-} from 'react-native';
+import {FlatList, KeyboardAvoidingView, Platform, Pressable, StyleSheet, Text, TextInput, View} from 'react-native';
 import {useSafeAreaInsets} from 'react-native-safe-area-context';
 
 import {colors} from '../../../theme/colors';
@@ -16,6 +7,7 @@ import type {ChatMessage, Conversation} from '../domain/models';
 
 type Props = {
   conversation: Conversation;
+  error?: string;
   messages: ChatMessage[];
   onBack: () => void;
   onSend: (body: string) => Promise<void>;
@@ -28,7 +20,7 @@ function formatMessageTime(iso: string) {
   }).format(new Date(iso));
 }
 
-export function ConversationScreen({conversation, messages, onBack, onSend}: Props) {
+export function ConversationScreen({conversation, error, messages, onBack, onSend}: Props) {
   const insets = useSafeAreaInsets();
   const listRef = useRef<FlatList<ChatMessage>>(null);
   const [draft, setDraft] = useState('');
@@ -40,14 +32,16 @@ export function ConversationScreen({conversation, messages, onBack, onSend}: Pro
     }
 
     setDraft('');
-    await onSend(body);
-    requestAnimationFrame(() => listRef.current?.scrollToEnd({animated: true}));
+    try {
+      await onSend(body);
+      requestAnimationFrame(() => listRef.current?.scrollToEnd({animated: true}));
+    } catch {
+      setDraft(body);
+    }
   };
 
   return (
-    <KeyboardAvoidingView
-      behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-      style={styles.screen}>
+    <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'} style={styles.screen}>
       <View style={[styles.header, {paddingTop: insets.top + 10}]}>
         <Pressable accessibilityRole="button" onPress={onBack} style={styles.backButton}>
           <Text style={styles.backText}>‹</Text>
@@ -68,9 +62,7 @@ export function ConversationScreen({conversation, messages, onBack, onSend}: Pro
       </View>
 
       <View style={styles.encryptionNotice}>
-        <Text style={styles.noticeText}>
-          Encryption adapter not connected — development UI
-        </Text>
+        <Text style={styles.noticeText}>Encryption adapter not connected — development UI</Text>
       </View>
 
       <FlatList
@@ -78,15 +70,15 @@ export function ConversationScreen({conversation, messages, onBack, onSend}: Pro
         contentContainerStyle={styles.messages}
         data={messages}
         keyExtractor={item => item.id}
+        keyboardDismissMode="interactive"
+        keyboardShouldPersistTaps="handled"
         onContentSizeChange={() => listRef.current?.scrollToEnd({animated: false})}
         renderItem={({item}) => {
           const outgoing = item.sender === 'me';
           return (
             <View style={[styles.messageRow, outgoing && styles.messageRowOutgoing]}>
               <View style={[styles.bubble, outgoing ? styles.outgoing : styles.incoming]}>
-                <Text style={[styles.messageText, outgoing && styles.outgoingText]}>
-                  {item.body}
-                </Text>
+                <Text style={[styles.messageText, outgoing && styles.outgoingText]}>{item.body}</Text>
                 <View style={styles.messageMeta}>
                   <Text style={[styles.messageTime, outgoing && styles.outgoingMeta]}>
                     {formatMessageTime(item.createdAt)}
@@ -102,6 +94,8 @@ export function ConversationScreen({conversation, messages, onBack, onSend}: Pro
           );
         }}
       />
+
+      {error ? <Text style={styles.error}>{error}</Text> : null}
 
       <View style={[styles.composer, {paddingBottom: Math.max(insets.bottom, 12)}]}>
         <TextInput
@@ -165,7 +159,15 @@ const styles = StyleSheet.create({
     paddingVertical: 8,
   },
   noticeText: {color: colors.warning, fontSize: 11, fontWeight: '700'},
-  messages: {paddingHorizontal: 14, paddingVertical: 20},
+  messages: {flexGrow: 1, paddingHorizontal: 14, paddingVertical: 20},
+  error: {
+    backgroundColor: '#FCE8E8',
+    color: '#A94343',
+    fontSize: 12,
+    paddingHorizontal: 14,
+    paddingVertical: 8,
+    textAlign: 'center',
+  },
   messageRow: {alignItems: 'flex-start', marginBottom: 10},
   messageRowOutgoing: {alignItems: 'flex-end'},
   bubble: {
@@ -219,5 +221,10 @@ const styles = StyleSheet.create({
   },
   sendDisabled: {backgroundColor: '#B8C0BB'},
   sendPressed: {opacity: 0.75},
-  sendText: {color: colors.surface, fontSize: 24, fontWeight: '600', lineHeight: 27},
+  sendText: {
+    color: colors.surface,
+    fontSize: 24,
+    fontWeight: '600',
+    lineHeight: 27,
+  },
 });

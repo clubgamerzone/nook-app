@@ -1,20 +1,29 @@
-import {useCallback, useMemo, useState} from 'react';
+import {useCallback, useEffect, useMemo, useState} from 'react';
 
-import {InMemoryChatRepository} from '../data/InMemoryChatRepository';
+import {FirebaseChatRepository} from '../data/FirebaseChatRepository';
 import type {ChatMessage, Conversation} from '../domain/models';
 
-export function useChatPrototype(conversations: Conversation[]) {
-  const repository = useMemo(() => new InMemoryChatRepository(), []);
+export function useChatPrototype(conversations: Conversation[], currentUid: string) {
+  const repository = useMemo(() => new FirebaseChatRepository(), []);
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [activeConversation, setActiveConversation] = useState<Conversation>();
+  const [messageError, setMessageError] = useState<string>();
 
-  const openConversation = useCallback(
-    async (conversation: Conversation) => {
-      setActiveConversation(conversation);
-      setMessages(await repository.listMessages(conversation.id));
-    },
-    [repository],
-  );
+  useEffect(() => {
+    if (!activeConversation) {
+      return;
+    }
+
+    setMessageError(undefined);
+    return repository.subscribeMessages(activeConversation.id, currentUid, setMessages, () =>
+      setMessageError('Messages could not be synchronized. Check your connection.'),
+    );
+  }, [activeConversation, currentUid, repository]);
+
+  const openConversation = useCallback((conversation: Conversation) => {
+    setActiveConversation(conversation);
+    setMessages([]);
+  }, []);
 
   const closeConversation = useCallback(() => {
     setActiveConversation(undefined);
@@ -27,16 +36,22 @@ export function useChatPrototype(conversations: Conversation[]) {
         return;
       }
 
-      const message = await repository.sendText(activeConversation.id, body);
-      setMessages(current => [...current, message]);
+      setMessageError(undefined);
+      try {
+        await repository.sendText(activeConversation.id, currentUid, body);
+      } catch {
+        setMessageError('Message not sent. Check your connection and try again.');
+        throw new Error('message-send-failed');
+      }
     },
-    [activeConversation, repository],
+    [activeConversation, currentUid, repository],
   );
 
   return {
     activeConversation,
     closeConversation,
     conversations,
+    messageError,
     messages,
     openConversation,
     sendMessage,

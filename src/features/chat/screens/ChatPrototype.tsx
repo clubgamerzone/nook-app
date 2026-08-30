@@ -43,7 +43,7 @@ export function ChatPrototype({accountEmail, onSignOut, profile}: Props) {
       })),
     [contacts.contacts],
   );
-  const chat = useChatPrototype(conversations);
+  const chat = useChatPrototype(conversations, profile.uid);
 
   if (contacts.loading) {
     return (
@@ -61,6 +61,7 @@ export function ChatPrototype({accountEmail, onSignOut, profile}: Props) {
     return (
       <ConversationScreen
         conversation={chat.activeConversation}
+        error={chat.messageError}
         messages={chat.messages}
         onBack={chat.closeConversation}
         onSend={chat.sendMessage}

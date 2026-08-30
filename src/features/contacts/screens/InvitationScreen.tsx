@@ -1,14 +1,7 @@
 import React, {useMemo, useState} from 'react';
-import {
-  Pressable,
-  ScrollView,
-  Share,
-  StyleSheet,
-  Text,
-  TextInput,
-  View,
-} from 'react-native';
+import {Pressable, ScrollView, Share, StyleSheet, Text, TextInput, View} from 'react-native';
 import {useSafeAreaInsets} from 'react-native-safe-area-context';
+import QRCode from 'react-native-qrcode-svg';
 
 import type {UserProfile} from '../../profile/domain/models';
 import {colors} from '../../../theme/colors';
@@ -121,7 +114,7 @@ export function InvitationScreen({onBack, profile}: Props) {
       return;
     }
     await Share.share({
-      message: `${profile.displayName} invited you to connect privately on Nook. Invitation code: ${created.code}`,
+      message: created.code,
     });
   };
 
@@ -143,14 +136,18 @@ export function InvitationScreen({onBack, profile}: Props) {
         <View style={styles.card}>
           <Text style={styles.cardEyebrow}>INVITE SOMEONE</Text>
           <Text style={styles.cardTitle}>Create a one-time invitation</Text>
-          <Text style={styles.cardText}>
-            It expires after 24 hours and becomes unusable when accepted or rejected.
-          </Text>
+          <Text style={styles.cardText}>It expires after 24 hours and becomes unusable when accepted or rejected.</Text>
           {created ? (
             <View style={styles.codeBox}>
               <Text style={styles.codeLabel}>Invitation code</Text>
-              <Text selectable style={styles.codeValue}>{created.code}</Text>
+              <Text selectable style={styles.codeValue}>
+                {created.code}
+              </Text>
               <Text style={styles.expiry}>Expires {formatExpiry(created.expiresAt)}</Text>
+              <View style={styles.qrBox}>
+                <QRCode backgroundColor={colors.surface} size={176} value={created.code} />
+              </View>
+              <Text style={styles.qrHelp}>Scan to read the invitation code.</Text>
               <Pressable onPress={shareInvitation} style={styles.primaryButton}>
                 <Text style={styles.primaryButtonText}>Share invitation</Text>
               </Pressable>
@@ -160,9 +157,7 @@ export function InvitationScreen({onBack, profile}: Props) {
               disabled={busy}
               onPress={createInvitation}
               style={({pressed}) => [styles.primaryButton, pressed && styles.pressed]}>
-              <Text style={styles.primaryButtonText}>
-                {busy ? 'Creating…' : 'Create invitation'}
-              </Text>
+              <Text style={styles.primaryButtonText}>{busy ? 'Creating…' : 'Create invitation'}</Text>
             </Pressable>
           )}
         </View>
@@ -243,7 +238,12 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     width: 38,
   },
-  backText: {color: colors.surface, fontSize: 31, lineHeight: 32, marginTop: -2},
+  backText: {
+    color: colors.surface,
+    fontSize: 31,
+    lineHeight: 32,
+    marginTop: -2,
+  },
   headerText: {flex: 1, marginLeft: 14},
   title: {color: colors.surface, fontSize: 25, fontWeight: '800'},
   subtitle: {color: '#B9C8C0', fontSize: 12, marginTop: 4},
@@ -255,9 +255,24 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     padding: 19,
   },
-  cardEyebrow: {color: colors.sage, fontSize: 11, fontWeight: '900', letterSpacing: 1.5},
-  cardTitle: {color: colors.text, fontSize: 19, fontWeight: '800', marginTop: 8},
-  cardText: {color: colors.textMuted, fontSize: 13, lineHeight: 19, marginTop: 7},
+  cardEyebrow: {
+    color: colors.sage,
+    fontSize: 11,
+    fontWeight: '900',
+    letterSpacing: 1.5,
+  },
+  cardTitle: {
+    color: colors.text,
+    fontSize: 19,
+    fontWeight: '800',
+    marginTop: 8,
+  },
+  cardText: {
+    color: colors.textMuted,
+    fontSize: 13,
+    lineHeight: 19,
+    marginTop: 7,
+  },
   primaryButton: {
     alignItems: 'center',
     backgroundColor: colors.ink,
@@ -269,11 +284,40 @@ const styles = StyleSheet.create({
   pressed: {opacity: 0.72},
   codeBox: {marginTop: 18},
   codeLabel: {color: colors.textMuted, fontSize: 11, fontWeight: '700'},
-  codeValue: {color: colors.inkSoft, fontSize: 18, fontWeight: '800', letterSpacing: 1, marginTop: 6},
+  codeValue: {
+    color: colors.inkSoft,
+    fontSize: 18,
+    fontWeight: '800',
+    letterSpacing: 1,
+    marginTop: 6,
+  },
   expiry: {color: colors.textMuted, fontSize: 11, marginTop: 7},
-  dividerRow: {alignItems: 'center', flexDirection: 'row', marginVertical: 19},
+  qrBox: {
+    alignItems: 'center',
+    alignSelf: 'center',
+    backgroundColor: colors.surface,
+    borderRadius: 14,
+    marginTop: 18,
+    padding: 12,
+  },
+  qrHelp: {
+    color: colors.textMuted,
+    fontSize: 11,
+    marginTop: 7,
+    textAlign: 'center',
+  },
+  dividerRow: {
+    alignItems: 'center',
+    flexDirection: 'row',
+    marginVertical: 19,
+  },
   divider: {backgroundColor: colors.border, flex: 1, height: 1},
-  or: {color: colors.textMuted, fontSize: 10, fontWeight: '800', marginHorizontal: 12},
+  or: {
+    color: colors.textMuted,
+    fontSize: 10,
+    fontWeight: '800',
+    marginHorizontal: 12,
+  },
   input: {
     backgroundColor: colors.canvas,
     borderColor: colors.border,
@@ -293,7 +337,11 @@ const styles = StyleSheet.create({
     marginTop: 12,
     paddingVertical: 13,
   },
-  secondaryButtonText: {color: colors.inkSoft, fontSize: 14, fontWeight: '800'},
+  secondaryButtonText: {
+    color: colors.inkSoft,
+    fontSize: 14,
+    fontWeight: '800',
+  },
   identityCard: {alignItems: 'center', marginTop: 20},
   avatar: {
     alignItems: 'center',
@@ -305,7 +353,12 @@ const styles = StyleSheet.create({
   },
   avatarText: {color: colors.inkSoft, fontSize: 20, fontWeight: '900'},
   identityLabel: {color: colors.textMuted, fontSize: 11, marginTop: 11},
-  identityName: {color: colors.text, fontSize: 20, fontWeight: '800', marginTop: 3},
+  identityName: {
+    color: colors.text,
+    fontSize: 20,
+    fontWeight: '800',
+    marginTop: 3,
+  },
   actionRow: {flexDirection: 'row', gap: 10, marginTop: 17, width: '100%'},
   rejectButton: {
     alignItems: 'center',
@@ -324,6 +377,18 @@ const styles = StyleSheet.create({
     paddingVertical: 12,
   },
   acceptText: {color: colors.surface, fontSize: 13, fontWeight: '800'},
-  error: {color: '#A94343', fontSize: 13, lineHeight: 19, marginTop: 16, textAlign: 'center'},
-  privacyNote: {color: colors.textMuted, fontSize: 11, lineHeight: 17, marginTop: 20, textAlign: 'center'},
+  error: {
+    color: '#A94343',
+    fontSize: 13,
+    lineHeight: 19,
+    marginTop: 16,
+    textAlign: 'center',
+  },
+  privacyNote: {
+    color: colors.textMuted,
+    fontSize: 11,
+    lineHeight: 17,
+    marginTop: 20,
+    textAlign: 'center',
+  },
 });

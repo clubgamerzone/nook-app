@@ -22,6 +22,12 @@ service cloud.firestore {
       ).data;
     }
 
+    function conversation(conversationId) {
+      return get(
+        /databases/$(database)/documents/conversations/$(conversationId)
+      ).data;
+    }
+
     function validContactCreate(ownerUid, contactUid) {
       let contact = request.resource.data;
       let invitation = invitationAfter(contact.invitationId);
@@ -206,6 +212,28 @@ service cloud.firestore {
         ).data.conversationId == conversationId;
 
       allow update, delete: if false;
+
+      match /messages/{messageId} {
+        allow read: if signedIn()
+          && request.auth.uid in conversation(conversationId).participantIds;
+
+        allow create: if signedIn()
+          && request.auth.uid in conversation(conversationId).participantIds
+          && request.resource.data.keys().hasOnly([
+            'body',
+            'createdAt',
+            'kind',
+            'senderUid'
+          ])
+          && request.resource.data.senderUid == request.auth.uid
+          && request.resource.data.kind == 'text'
+          && request.resource.data.body is string
+          && request.resource.data.body.size() >= 1
+          && request.resource.data.body.size() <= 4000
+          && request.resource.data.createdAt == request.time;
+
+        allow update, delete: if false;
+      }
     }
 
     match /{document=**} {
