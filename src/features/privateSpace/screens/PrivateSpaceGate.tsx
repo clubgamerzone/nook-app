@@ -1,4 +1,4 @@
-import React, {useEffect, useMemo, useState} from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import {
   ActivityIndicator,
   KeyboardAvoidingView,
@@ -10,12 +10,15 @@ import {
   TextInput,
   View,
 } from 'react-native';
-import {useSafeAreaInsets} from 'react-native-safe-area-context';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-import {colors} from '../../../theme/colors';
-import {ChatPrototype} from '../../chat/screens/ChatPrototype';
-import type {UserProfile} from '../../profile/domain/models';
-import {PrivateLockService, type PrivateLockConfiguration} from '../lock/PrivateLockService';
+import { colors } from '../../../theme/colors';
+import { ChatPrototype } from '../../chat/screens/ChatPrototype';
+import type { UserProfile } from '../../profile/domain/models';
+import {
+  PrivateLockService,
+  type PrivateLockConfiguration,
+} from '../lock/PrivateLockService';
 
 type Props = {
   accountEmail: string | null;
@@ -25,10 +28,21 @@ type Props = {
   profile: UserProfile;
 };
 
-export function PrivateSpaceGate({accountEmail, lockSignal, onExit, onSignOut, profile}: Props) {
+function allowBusyStateToRender() {
+  return new Promise<void>(resolve => setTimeout(resolve, 100));
+}
+
+export function PrivateSpaceGate({
+  accountEmail,
+  lockSignal,
+  onExit,
+  onSignOut,
+  profile,
+}: Props) {
   const insets = useSafeAreaInsets();
   const service = useMemo(() => new PrivateLockService(), []);
-  const [configuration, setConfiguration] = useState<PrivateLockConfiguration | null>();
+  const [configuration, setConfiguration] =
+    useState<PrivateLockConfiguration | null>();
   const [unlocked, setUnlocked] = useState(false);
   const [pin, setPin] = useState('');
   const [confirmation, setConfirmation] = useState('');
@@ -40,7 +54,11 @@ export function PrivateSpaceGate({accountEmail, lockSignal, onExit, onSignOut, p
   const [error, setError] = useState<string>();
 
   useEffect(() => {
-    Promise.all([service.load(profile.uid), service.supportedBiometry(), service.loadAttemptState(profile.uid)])
+    Promise.all([
+      service.load(profile.uid),
+      service.supportedBiometry(),
+      service.loadAttemptState(profile.uid),
+    ])
       .then(([stored, biometry, attemptState]) => {
         setConfiguration(stored);
         setBiometryAvailable(Boolean(biometry));
@@ -72,7 +90,12 @@ export function PrivateSpaceGate({accountEmail, lockSignal, onExit, onSignOut, p
     setBusy(true);
     setError(undefined);
     try {
-      const created = await service.create(profile.uid, pin, biometricEnabled && biometryAvailable);
+      await allowBusyStateToRender();
+      const created = await service.create(
+        profile.uid,
+        pin,
+        biometricEnabled && biometryAvailable,
+      );
       setConfiguration(created);
       setPin('');
       setConfirmation('');
@@ -90,22 +113,32 @@ export function PrivateSpaceGate({accountEmail, lockSignal, onExit, onSignOut, p
     }
     const now = Date.now();
     if (blockedUntil > now) {
-      setError(`Try again in ${Math.ceil((blockedUntil - now) / 1000)} seconds.`);
+      setError(
+        `Try again in ${Math.ceil((blockedUntil - now) / 1000)} seconds.`,
+      );
       return;
     }
     setBusy(true);
     setError(undefined);
     try {
+      await allowBusyStateToRender();
       if (await service.verify(pin, configuration)) {
         await service.clearFailures(profile.uid);
         setFailedAttempts(0);
         setPin('');
         setUnlocked(true);
       } else {
-        const attemptState = await service.recordFailure(profile.uid, failedAttempts);
+        const attemptState = await service.recordFailure(
+          profile.uid,
+          failedAttempts,
+        );
         setFailedAttempts(attemptState.failures);
         setBlockedUntil(attemptState.blockedUntil);
-        setError(attemptState.delay ? `Incorrect PIN. Try again in ${attemptState.delay} seconds.` : 'Incorrect PIN.');
+        setError(
+          attemptState.delay
+            ? `Incorrect PIN. Try again in ${attemptState.delay} seconds.`
+            : 'Incorrect PIN.',
+        );
       }
     } finally {
       setBusy(false);
@@ -135,31 +168,50 @@ export function PrivateSpaceGate({accountEmail, lockSignal, onExit, onSignOut, p
   }
 
   if (unlocked) {
-    return <ChatPrototype accountEmail={accountEmail} onExit={onExit} onSignOut={onSignOut} profile={profile} />;
+    return (
+      <ChatPrototype
+        accountEmail={accountEmail}
+        onExit={onExit}
+        onSignOut={onSignOut}
+        profile={profile}
+      />
+    );
   }
 
   const settingUp = configuration === null;
   return (
-    <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined} style={styles.screen}>
-      <View style={[styles.hero, {paddingTop: insets.top + 16}]}>
-        <Pressable accessibilityRole="button" onPress={onExit} style={styles.back}>
+    <KeyboardAvoidingView
+      behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+      style={styles.screen}
+    >
+      <View style={[styles.hero, { paddingTop: insets.top + 16 }]}>
+        <Pressable
+          accessibilityRole="button"
+          onPress={onExit}
+          style={styles.back}
+        >
           <Text style={styles.backText}>‹</Text>
         </Pressable>
         <Text style={styles.eyebrow}>APP SECURITY</Text>
-        <Text style={styles.title}>{settingUp ? 'Create an access PIN' : 'Verify access'}</Text>
+        <Text style={styles.title}>
+          {settingUp ? 'Create an access PIN' : 'Verify access'}
+        </Text>
         <Text style={styles.subtitle}>
           {settingUp
             ? 'Your PIN stays on this device and is stored only as a memory-hard verifier.'
             : 'Enter your local PIN to continue.'}
         </Text>
       </View>
-      <View style={[styles.form, {paddingBottom: Math.max(insets.bottom, 22)}]}>
+      <View
+        style={[styles.form, { paddingBottom: Math.max(insets.bottom, 22) }]}
+      >
         <Text style={styles.label}>{settingUp ? 'New PIN' : 'Access PIN'}</Text>
         <TextInput
           accessibilityLabel="Access PIN"
           autoFocus
           keyboardType="number-pad"
           maxLength={8}
+          editable={!busy}
           onChangeText={value => setPin(value.replace(/\D/g, ''))}
           onSubmitEditing={settingUp ? undefined : unlock}
           placeholder="4–8 digits"
@@ -174,6 +226,7 @@ export function PrivateSpaceGate({accountEmail, lockSignal, onExit, onSignOut, p
             <TextInput
               keyboardType="number-pad"
               maxLength={8}
+              editable={!busy}
               onChangeText={value => setConfirmation(value.replace(/\D/g, ''))}
               placeholder="Enter it again"
               placeholderTextColor={colors.textMuted}
@@ -185,21 +238,55 @@ export function PrivateSpaceGate({accountEmail, lockSignal, onExit, onSignOut, p
               <View style={styles.biometricRow}>
                 <View style={styles.biometricCopy}>
                   <Text style={styles.biometricTitle}>Use biometrics</Text>
-                  <Text style={styles.biometricHelp}>Face or fingerprint unlock, with PIN fallback.</Text>
+                  <Text style={styles.biometricHelp}>
+                    Face or fingerprint unlock, with PIN fallback.
+                  </Text>
                 </View>
-                <Switch onValueChange={setBiometricEnabled} value={biometricEnabled} />
+                <Switch
+                  disabled={busy}
+                  onValueChange={setBiometricEnabled}
+                  value={biometricEnabled}
+                />
               </View>
             ) : null}
           </>
         ) : null}
         {error ? <Text style={styles.error}>{error}</Text> : null}
-        <Pressable disabled={busy} onPress={settingUp ? createLock : unlock} style={styles.primary}>
+        {busy ? (
+          <View accessibilityLiveRegion="polite" style={styles.busyNotice}>
+            <ActivityIndicator color={colors.inkSoft} size="small" />
+            <View style={styles.busyCopy}>
+              <Text style={styles.busyTitle}>
+                {settingUp ? 'Securing your PIN…' : 'Verifying securely…'}
+              </Text>
+              <Text style={styles.busyText}>
+                This security check can take a few seconds.
+              </Text>
+            </View>
+          </View>
+        ) : null}
+        <Pressable
+          accessibilityState={{ busy, disabled: busy }}
+          disabled={busy}
+          onPress={settingUp ? createLock : unlock}
+          style={[styles.primary, busy && styles.primaryDisabled]}
+        >
           <Text style={styles.primaryText}>
-            {busy ? 'Please wait…' : settingUp ? 'Save access PIN' : 'Continue'}
+            {busy
+              ? settingUp
+                ? 'Securing…'
+                : 'Verifying…'
+              : settingUp
+              ? 'Save access PIN'
+              : 'Continue'}
           </Text>
         </Pressable>
         {!settingUp && configuration.biometricEnabled ? (
-          <Pressable disabled={busy} onPress={biometricUnlock} style={styles.secondary}>
+          <Pressable
+            disabled={busy}
+            onPress={biometricUnlock}
+            style={styles.secondary}
+          >
             <Text style={styles.secondaryText}>Unlock with biometrics</Text>
           </Pressable>
         ) : null}
@@ -209,8 +296,13 @@ export function PrivateSpaceGate({accountEmail, lockSignal, onExit, onSignOut, p
 }
 
 const styles = StyleSheet.create({
-  loading: {alignItems: 'center', backgroundColor: colors.ink, flex: 1, justifyContent: 'center'},
-  screen: {backgroundColor: colors.canvas, flex: 1},
+  loading: {
+    alignItems: 'center',
+    backgroundColor: colors.ink,
+    flex: 1,
+    justifyContent: 'center',
+  },
+  screen: { backgroundColor: colors.canvas, flex: 1 },
   hero: {
     backgroundColor: colors.ink,
     borderBottomLeftRadius: 28,
@@ -218,13 +310,30 @@ const styles = StyleSheet.create({
     paddingBottom: 34,
     paddingHorizontal: 24,
   },
-  back: {height: 40, justifyContent: 'center', marginLeft: -8, width: 40},
-  backText: {color: colors.surface, fontSize: 38, lineHeight: 39},
-  eyebrow: {color: '#A9CEB7', fontSize: 11, fontWeight: '900', letterSpacing: 2.5, marginTop: 15},
-  title: {color: colors.surface, fontSize: 30, fontWeight: '800', marginTop: 16},
-  subtitle: {color: '#B9C8C0', fontSize: 14, lineHeight: 21, marginTop: 9},
-  form: {padding: 22},
-  label: {color: colors.text, fontSize: 12, fontWeight: '800', marginBottom: 7, marginTop: 12},
+  back: { height: 40, justifyContent: 'center', marginLeft: -8, width: 40 },
+  backText: { color: colors.surface, fontSize: 38, lineHeight: 39 },
+  eyebrow: {
+    color: '#A9CEB7',
+    fontSize: 11,
+    fontWeight: '900',
+    letterSpacing: 2.5,
+    marginTop: 15,
+  },
+  title: {
+    color: colors.surface,
+    fontSize: 30,
+    fontWeight: '800',
+    marginTop: 16,
+  },
+  subtitle: { color: '#B9C8C0', fontSize: 14, lineHeight: 21, marginTop: 9 },
+  form: { padding: 22 },
+  label: {
+    color: colors.text,
+    fontSize: 12,
+    fontWeight: '800',
+    marginBottom: 7,
+    marginTop: 12,
+  },
   input: {
     backgroundColor: colors.surface,
     borderColor: colors.border,
@@ -246,12 +355,40 @@ const styles = StyleSheet.create({
     marginTop: 20,
     padding: 14,
   },
-  biometricCopy: {flex: 1, marginRight: 12},
-  biometricTitle: {color: colors.text, fontSize: 14, fontWeight: '800'},
-  biometricHelp: {color: colors.textMuted, fontSize: 11, lineHeight: 16, marginTop: 3},
-  error: {color: '#A94343', fontSize: 12, lineHeight: 18, marginTop: 15},
-  primary: {alignItems: 'center', backgroundColor: colors.ink, borderRadius: 14, marginTop: 22, paddingVertical: 15},
-  primaryText: {color: colors.surface, fontSize: 15, fontWeight: '800'},
+  biometricCopy: { flex: 1, marginRight: 12 },
+  biometricTitle: { color: colors.text, fontSize: 14, fontWeight: '800' },
+  biometricHelp: {
+    color: colors.textMuted,
+    fontSize: 11,
+    lineHeight: 16,
+    marginTop: 3,
+  },
+  error: { color: '#A94343', fontSize: 12, lineHeight: 18, marginTop: 15 },
+  busyNotice: {
+    alignItems: 'center',
+    backgroundColor: '#E7EFEA',
+    borderRadius: 14,
+    flexDirection: 'row',
+    marginTop: 18,
+    padding: 13,
+  },
+  busyCopy: { flex: 1, marginLeft: 11 },
+  busyTitle: { color: colors.inkSoft, fontSize: 13, fontWeight: '800' },
+  busyText: {
+    color: colors.textMuted,
+    fontSize: 11,
+    lineHeight: 16,
+    marginTop: 2,
+  },
+  primary: {
+    alignItems: 'center',
+    backgroundColor: colors.ink,
+    borderRadius: 14,
+    marginTop: 22,
+    paddingVertical: 15,
+  },
+  primaryDisabled: { opacity: 0.72 },
+  primaryText: { color: colors.surface, fontSize: 15, fontWeight: '800' },
   secondary: {
     alignItems: 'center',
     borderColor: colors.sage,
@@ -260,5 +397,5 @@ const styles = StyleSheet.create({
     marginTop: 11,
     paddingVertical: 14,
   },
-  secondaryText: {color: colors.inkSoft, fontSize: 14, fontWeight: '800'},
+  secondaryText: { color: colors.inkSoft, fontSize: 14, fontWeight: '800' },
 });
