@@ -60,7 +60,7 @@ export function OrganizerSettingsScreen({
       <View style={[styles.header, {paddingTop: insets.top + 20}]}>
         <Text style={styles.eyebrow}>NOOK</Text>
         <Text style={styles.title}>Settings</Text>
-        <Text style={styles.subtitle}>Your account, privacy, and additional features.</Text>
+        <Text style={styles.subtitle}>Your account, local data, and app preferences.</Text>
       </View>
       <ScrollView contentContainerStyle={[styles.content, {paddingBottom: insets.bottom + 100}]}>
         <Text style={styles.sectionLabel}>ACCOUNT</Text>
@@ -69,14 +69,14 @@ export function OrganizerSettingsScreen({
           <Text style={styles.cardText}>{accountEmail ?? 'Private account'}</Text>
         </View>
 
-        <Text style={styles.sectionLabel}>ADDITIONAL FEATURES</Text>
+        <Text style={styles.sectionLabel}>SECURITY</Text>
         <Pressable accessibilityRole="button" onPress={onOpenPrivateSpace} style={styles.privateCard}>
           <View style={styles.privateIcon}>
             <Text style={styles.privateIconText}>◈</Text>
           </View>
           <View style={styles.privateCopy}>
-            <Text style={styles.privateTitle}>Private Space</Text>
-            <Text style={styles.privateText}>PIN-protected, invitation-only conversations.</Text>
+            <Text style={styles.privateTitle}>Privacy &amp; access</Text>
+            <Text style={styles.privateText}>Manage PIN and device security.</Text>
           </View>
           <Text style={styles.privateChevron}>›</Text>
         </Pressable>
@@ -90,14 +90,6 @@ export function OrganizerSettingsScreen({
           <Pressable onPress={confirmClear} style={styles.textButton}>
             <Text style={styles.destructiveText}>Clear organizer data</Text>
           </Pressable>
-        </View>
-
-        <View style={styles.card}>
-          <Text style={styles.cardTitle}>About protected messaging</Text>
-          <Text style={styles.cardText}>
-            Private Space is intentionally separate, but it is a disclosed Nook capability. Chat push notifications are
-            disabled in this beta.
-          </Text>
         </View>
 
         <Pressable onPress={onSignOut} style={styles.signOut}>
@@ -114,7 +106,7 @@ export function OrganizerSettingsScreen({
             <Text style={styles.modalTitle}>Delete your Nook account?</Text>
             <Text style={styles.modalText}>
               This permanently removes your account and profile, disconnects your contacts, and clears organizer and
-              Private Space data from this device. Safety reports may be retained.
+              protected local data from this device. Safety reports may be retained.
             </Text>
             <Text style={styles.modalLabel}>Current password</Text>
             <TextInput

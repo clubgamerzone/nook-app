@@ -8,11 +8,11 @@ Nook is a genuine local-first organizer for reminders, medicine schedules, appoi
 
 1. Sign in using the review account credentials supplied in the store portal.
 2. Open **Settings** from the bottom navigation.
-3. Under **Additional Features**, open **Private Space**.
+3. Under **Security**, open **Privacy & access**.
 4. On first access, create a 4–8 digit local PIN. Biometrics are optional.
 5. Use **+** to create or enter a one-time invitation code.
 
-The Private Space entry is deliberately separated from the normal organizer navigation, but it is not represented as an unrelated application or omitted from product disclosures.
+The pre-unlock interface uses neutral privacy language so a casual observer cannot infer what the user keeps behind the local PIN. After successful verification, the messaging feature is identified normally. The feature remains fully documented here and in the product and privacy disclosures.
 
 ## Current behavior
 

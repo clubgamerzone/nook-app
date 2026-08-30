@@ -49,7 +49,7 @@ export function PrivateSpaceGate({accountEmail, lockSignal, onExit, onSignOut, p
       })
       .catch(() => {
         setConfiguration(null);
-        setError('Private Space security could not be initialized.');
+        setError('Access security could not be initialized.');
       });
   }, [profile.uid, service]);
 
@@ -78,7 +78,7 @@ export function PrivateSpaceGate({accountEmail, lockSignal, onExit, onSignOut, p
       setConfirmation('');
       setUnlocked(true);
     } catch {
-      setError('Nook could not protect Private Space on this device.');
+      setError('Nook could not save the access PIN on this device.');
     } finally {
       setBusy(false);
     }
@@ -145,18 +145,18 @@ export function PrivateSpaceGate({accountEmail, lockSignal, onExit, onSignOut, p
         <Pressable accessibilityRole="button" onPress={onExit} style={styles.back}>
           <Text style={styles.backText}>‹</Text>
         </Pressable>
-        <Text style={styles.eyebrow}>PRIVATE SPACE</Text>
-        <Text style={styles.title}>{settingUp ? 'Create your private lock' : 'Welcome back'}</Text>
+        <Text style={styles.eyebrow}>APP SECURITY</Text>
+        <Text style={styles.title}>{settingUp ? 'Create an access PIN' : 'Verify access'}</Text>
         <Text style={styles.subtitle}>
           {settingUp
             ? 'Your PIN stays on this device and is stored only as a memory-hard verifier.'
-            : 'Unlock to reach your invitation-only conversations.'}
+            : 'Enter your local PIN to continue.'}
         </Text>
       </View>
       <View style={[styles.form, {paddingBottom: Math.max(insets.bottom, 22)}]}>
-        <Text style={styles.label}>{settingUp ? 'New PIN' : 'Private PIN'}</Text>
+        <Text style={styles.label}>{settingUp ? 'New PIN' : 'Access PIN'}</Text>
         <TextInput
-          accessibilityLabel="Private Space PIN"
+          accessibilityLabel="Access PIN"
           autoFocus
           keyboardType="number-pad"
           maxLength={8}
@@ -195,7 +195,7 @@ export function PrivateSpaceGate({accountEmail, lockSignal, onExit, onSignOut, p
         {error ? <Text style={styles.error}>{error}</Text> : null}
         <Pressable disabled={busy} onPress={settingUp ? createLock : unlock} style={styles.primary}>
           <Text style={styles.primaryText}>
-            {busy ? 'Please wait…' : settingUp ? 'Protect Private Space' : 'Unlock'}
+            {busy ? 'Please wait…' : settingUp ? 'Save access PIN' : 'Continue'}
           </Text>
         </Pressable>
         {!settingUp && configuration.biometricEnabled ? (

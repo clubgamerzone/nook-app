@@ -120,7 +120,7 @@ export class PrivateLockService {
 
   async unlockWithBiometrics(uid: string) {
     const credential = await Keychain.getGenericPassword({
-      authenticationPrompt: {title: 'Unlock Private Space'},
+      authenticationPrompt: {title: 'Verify Nook access'},
       service: biometricService(uid),
     });
     return Boolean(credential);
