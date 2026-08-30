@@ -1,0 +1,15 @@
+export const colors = {
+  ink: '#15251F',
+  inkSoft: '#253B33',
+  canvas: '#F6F4EE',
+  surface: '#FFFFFF',
+  surfaceMuted: '#EAEDE7',
+  sage: '#668171',
+  sageLight: '#DCE6DF',
+  text: '#16211D',
+  textMuted: '#68746E',
+  border: '#D9DDD7',
+  outgoing: '#203C32',
+  incoming: '#FFFFFF',
+  warning: '#A76C32',
+} as const;

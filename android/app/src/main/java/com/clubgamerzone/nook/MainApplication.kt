@@ -1,4 +1,4 @@
-package com.nook
+package com.clubgamerzone.nook
 
 import android.app.Application
 import com.facebook.react.PackageList

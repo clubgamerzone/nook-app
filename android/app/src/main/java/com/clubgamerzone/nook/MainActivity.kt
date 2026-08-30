@@ -1,4 +1,4 @@
-package com.nook
+package com.clubgamerzone.nook
 
 import com.facebook.react.ReactActivity
 import com.facebook.react.ReactActivityDelegate
