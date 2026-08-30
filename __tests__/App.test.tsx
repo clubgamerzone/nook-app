@@ -16,6 +16,22 @@ jest.mock('@react-native-firebase/auth', () => ({
   signOut: jest.fn(),
 }));
 
+jest.mock('@react-native-firebase/firestore', () => ({
+  Timestamp: class MockTimestamp {
+    static fromDate(value: Date) {
+      return {toDate: () => value};
+    }
+  },
+  collection: jest.fn(),
+  doc: jest.fn(),
+  getDoc: jest.fn(),
+  getFirestore: jest.fn(() => ({})),
+  onSnapshot: jest.fn(),
+  runTransaction: jest.fn(),
+  serverTimestamp: jest.fn(),
+  setDoc: jest.fn(),
+}));
+
 import App from '../App';
 
 test('renders correctly', async () => {

@@ -2,8 +2,212 @@ rules_version = '2';
 
 service cloud.firestore {
   match /databases/{database}/documents {
-    // Secure default: no client data is accepted until the invitation,
-    // participant authorization, and ciphertext-only schemas are finalized.
+    function signedIn() {
+      return request.auth != null;
+    }
+
+    function validDisplayName(name) {
+      return name is string && name.size() >= 2 && name.size() <= 40;
+    }
+
+    function invitationAfter(invitationId) {
+      return getAfter(
+        /databases/$(database)/documents/invitations/$(invitationId)
+      ).data;
+    }
+
+    function conversationAfter(conversationId) {
+      return getAfter(
+        /databases/$(database)/documents/conversations/$(conversationId)
+      ).data;
+    }
+
+    function validContactCreate(ownerUid, contactUid) {
+      let contact = request.resource.data;
+      let invitation = invitationAfter(contact.invitationId);
+      let conversation = conversationAfter(contact.conversationId);
+      return signedIn()
+        && request.auth.uid in [ownerUid, contactUid]
+        && contact.keys().hasOnly([
+          'acceptedAt',
+          'contactUid',
+          'conversationId',
+          'displayName',
+          'invitationId',
+          'ownerUid'
+        ])
+        && contact.ownerUid == ownerUid
+        && contact.contactUid == contactUid
+        && contact.conversationId == contact.invitationId
+        && contact.acceptedAt == request.time
+        && validDisplayName(contact.displayName)
+        && invitation.status == 'accepted'
+        && invitation.acceptedBy == request.auth.uid
+        && conversation.invitationId == contact.invitationId
+        && ownerUid in conversation.participantIds
+        && contactUid in conversation.participantIds
+        && (
+          (
+            ownerUid == invitation.inviterUid
+            && contactUid == invitation.acceptedBy
+            && contact.displayName == get(
+              /databases/$(database)/documents/users/$(contactUid)
+            ).data.displayName
+          )
+          ||
+          (
+            ownerUid == invitation.acceptedBy
+            && contactUid == invitation.inviterUid
+            && contact.displayName == invitation.inviterDisplayName
+          )
+        );
+    }
+
+    match /users/{uid} {
+      allow get: if signedIn() && request.auth.uid == uid;
+      allow list: if false;
+
+      allow create: if signedIn()
+        && request.auth.uid == uid
+        && request.resource.data.keys().hasOnly([
+          'createdAt',
+          'displayName',
+          'updatedAt'
+        ])
+        && validDisplayName(request.resource.data.displayName)
+        && request.resource.data.createdAt == request.time
+        && request.resource.data.updatedAt == request.time;
+
+      allow update: if signedIn()
+        && request.auth.uid == uid
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly([
+          'displayName',
+          'updatedAt'
+        ])
+        && validDisplayName(request.resource.data.displayName)
+        && request.resource.data.updatedAt == request.time;
+
+      allow delete: if signedIn() && request.auth.uid == uid;
+
+      match /contacts/{contactUid} {
+        allow read: if signedIn() && request.auth.uid == uid;
+        allow create: if validContactCreate(uid, contactUid);
+        allow update, delete: if false;
+      }
+    }
+
+    match /invitations/{invitationId} {
+      allow get: if signedIn()
+        && (
+          resource.data.inviterUid == request.auth.uid
+          || resource.data.get('acceptedBy', '') == request.auth.uid
+          || (
+            resource.data.status == 'pending'
+            && resource.data.expiresAt > request.time
+          )
+        );
+      allow list: if false;
+
+      allow create: if signedIn()
+        && invitationId.size() >= 20
+        && request.resource.data.keys().hasOnly([
+          'createdAt',
+          'expiresAt',
+          'inviterDisplayName',
+          'inviterUid',
+          'status'
+        ])
+        && request.resource.data.inviterUid == request.auth.uid
+        && request.resource.data.inviterDisplayName == get(
+          /databases/$(database)/documents/users/$(request.auth.uid)
+        ).data.displayName
+        && validDisplayName(request.resource.data.inviterDisplayName)
+        && request.resource.data.status == 'pending'
+        && request.resource.data.createdAt == request.time
+        && request.resource.data.expiresAt > request.time
+        && request.resource.data.expiresAt <= request.time + duration.value(24, 'h');
+
+      allow update: if signedIn()
+        && resource.data.status == 'pending'
+        && resource.data.expiresAt > request.time
+        && resource.data.inviterUid != request.auth.uid
+        && request.resource.data.inviterUid == resource.data.inviterUid
+        && request.resource.data.inviterDisplayName == resource.data.inviterDisplayName
+        && request.resource.data.createdAt == resource.data.createdAt
+        && request.resource.data.expiresAt == resource.data.expiresAt
+        && request.resource.data.acceptedBy == request.auth.uid
+        && (
+          (
+            request.resource.data.keys().hasOnly([
+              'acceptedAt',
+              'acceptedBy',
+              'createdAt',
+              'expiresAt',
+              'inviterDisplayName',
+              'inviterUid',
+              'status'
+            ])
+            && request.resource.data.status == 'accepted'
+            && request.resource.data.acceptedAt == request.time
+          )
+          ||
+          (
+            request.resource.data.keys().hasOnly([
+              'acceptedBy',
+              'createdAt',
+              'expiresAt',
+              'inviterDisplayName',
+              'inviterUid',
+              'respondedAt',
+              'status'
+            ])
+            && request.resource.data.status == 'rejected'
+            && request.resource.data.respondedAt == request.time
+          )
+        );
+
+      allow delete: if signedIn()
+        && resource.data.inviterUid == request.auth.uid
+        && resource.data.status == 'pending';
+    }
+
+    match /conversations/{conversationId} {
+      allow read: if signedIn() && request.auth.uid in resource.data.participantIds;
+
+      allow create: if signedIn()
+        && request.resource.data.keys().hasOnly([
+          'createdAt',
+          'invitationId',
+          'participantIds'
+        ])
+        && conversationId == request.resource.data.invitationId
+        && request.resource.data.createdAt == request.time
+        && request.resource.data.participantIds is list
+        && request.resource.data.participantIds.size() == 2
+        && invitationAfter(request.resource.data.invitationId).status == 'accepted'
+        && invitationAfter(request.resource.data.invitationId).acceptedBy == request.auth.uid
+        && invitationAfter(request.resource.data.invitationId).inviterUid
+          in request.resource.data.participantIds
+        && invitationAfter(request.resource.data.invitationId).acceptedBy
+          in request.resource.data.participantIds
+        && getAfter(
+          /databases/$(database)/documents/users/$(
+            invitationAfter(request.resource.data.invitationId).inviterUid
+          )/contacts/$(
+            invitationAfter(request.resource.data.invitationId).acceptedBy
+          )
+        ).data.conversationId == conversationId
+        && getAfter(
+          /databases/$(database)/documents/users/$(
+            invitationAfter(request.resource.data.invitationId).acceptedBy
+          )/contacts/$(
+            invitationAfter(request.resource.data.invitationId).inviterUid
+          )
+        ).data.conversationId == conversationId;
+
+      allow update, delete: if false;
+    }
+
     match /{document=**} {
       allow read, write: if false;
     }

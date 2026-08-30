@@ -8,7 +8,9 @@ import type {Conversation} from '../domain/models';
 
 type Props = {
   accountEmail: string | null;
+  accountDisplayName: string;
   conversations: Conversation[];
+  contactError?: string;
   onAddPerson: () => void;
   onOpenConversation: (conversation: Conversation) => void;
   onSignOut: () => Promise<void>;
@@ -23,7 +25,9 @@ function formatTime(iso: string) {
 
 export function ConversationListScreen({
   accountEmail,
+  accountDisplayName,
   conversations,
+  contactError,
   onAddPerson,
   onOpenConversation,
   onSignOut,
@@ -75,6 +79,18 @@ export function ConversationListScreen({
             </View>
           </Pressable>
         )}
+        ListEmptyComponent={
+          <View style={styles.emptyState}>
+            <Text style={styles.emptyTitle}>
+              {contactError ? 'Contacts unavailable' : 'Your private space is ready'}
+            </Text>
+            <Text style={styles.emptyText}>
+              {contactError
+                ? contactError
+                : 'Tap + to create an invitation or enter a code from someone you trust.'}
+            </Text>
+          </View>
+        }
         ListFooterComponent={
           <View>
             <View style={styles.footerNote}>
@@ -85,7 +101,7 @@ export function ConversationListScreen({
             </View>
             <View style={styles.accountRow}>
               <Text numberOfLines={1} style={styles.accountText}>
-                Signed in as {accountEmail ?? 'private account'}
+                {accountDisplayName} · {accountEmail ?? 'private account'}
               </Text>
               <Pressable accessibilityRole="button" onPress={onSignOut}>
                 <Text style={styles.signOut}>Sign out</Text>
@@ -166,6 +182,23 @@ const styles = StyleSheet.create({
   },
   footerTitle: {color: colors.text, fontSize: 14, fontWeight: '700'},
   footerText: {color: colors.textMuted, fontSize: 13, lineHeight: 19, marginTop: 4},
+  emptyState: {
+    alignItems: 'center',
+    backgroundColor: colors.surface,
+    borderColor: colors.border,
+    borderRadius: 18,
+    borderWidth: 1,
+    paddingHorizontal: 24,
+    paddingVertical: 30,
+  },
+  emptyTitle: {color: colors.text, fontSize: 17, fontWeight: '800', textAlign: 'center'},
+  emptyText: {
+    color: colors.textMuted,
+    fontSize: 13,
+    lineHeight: 20,
+    marginTop: 8,
+    textAlign: 'center',
+  },
   accountRow: {
     alignItems: 'center',
     flexDirection: 'row',

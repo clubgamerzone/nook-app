@@ -1,22 +1,12 @@
-import {useCallback, useEffect, useMemo, useState} from 'react';
+import {useCallback, useMemo, useState} from 'react';
 
 import {InMemoryChatRepository} from '../data/InMemoryChatRepository';
 import type {ChatMessage, Conversation} from '../domain/models';
 
-export function useChatPrototype() {
+export function useChatPrototype(conversations: Conversation[]) {
   const repository = useMemo(() => new InMemoryChatRepository(), []);
-  const [conversations, setConversations] = useState<Conversation[]>([]);
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [activeConversation, setActiveConversation] = useState<Conversation>();
-  const [loading, setLoading] = useState(true);
-
-  const refreshConversations = useCallback(async () => {
-    setConversations(await repository.listConversations());
-  }, [repository]);
-
-  useEffect(() => {
-    refreshConversations().finally(() => setLoading(false));
-  }, [refreshConversations]);
 
   const openConversation = useCallback(
     async (conversation: Conversation) => {
@@ -29,8 +19,7 @@ export function useChatPrototype() {
   const closeConversation = useCallback(() => {
     setActiveConversation(undefined);
     setMessages([]);
-    refreshConversations();
-  }, [refreshConversations]);
+  }, []);
 
   const sendMessage = useCallback(
     async (body: string) => {
@@ -48,7 +37,6 @@ export function useChatPrototype() {
     activeConversation,
     closeConversation,
     conversations,
-    loading,
     messages,
     openConversation,
     sendMessage,

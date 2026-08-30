@@ -12,6 +12,10 @@ has been validated.
 - Typed repository and cryptography boundaries
 - Firebase email/password account gate
 - Native Firebase Authentication and Firestore modules
+- Required user-chosen display-name onboarding
+- Short-lived, single-use invitation codes with identity review
+- Atomic accepted-contact and conversation creation in Firestore
+- Realtime accepted-contact list; no email, phone, or name discovery
 - No production encryption, message persistence, or message transport yet
 
 The visible warning in the conversation screen is intentional. It must remain
@@ -28,6 +32,8 @@ src/
     domain/           Message and conversation types
     hooks/            Presentation state
     screens/          Conversation list and thread
+  features/contacts/  Invitation lifecycle and accepted contacts
+  features/profile/   Private display-name onboarding
   security/crypto/    Native E2EE adapter boundary
   theme/              Shared visual tokens
 ```
@@ -56,14 +62,14 @@ The Android application ID and iOS bundle identifier are both
 
 The native configurations target Firebase project `nook-73e02`. Email/password
 authentication must be enabled in the Firebase console before account creation
-will work. Firestore rules are intentionally deny-all until the invitation and
-ciphertext message schemas are finalized; do not deploy permissive development
-rules or write plaintext chat content to Firestore.
+will work. The checked-in Firestore rules permit only private profiles,
+capability-style invitation reads, atomic contact acceptance, and participant
+conversation reads. Do not write plaintext chat content to Firestore.
 
 ## Next milestone
 
 1. Create separate development and production Firebase projects.
-2. Add Firebase Authentication without requiring an account for the future local organizer.
-3. Implement one-time invitations and accepted-contact authorization.
-4. Prove the native libsignal adapter on both platforms.
-5. Store only ciphertext envelopes in Firestore.
+2. Keep Firebase Authentication optional for the future local-only organizer.
+3. Prove the native libsignal adapter on both platforms.
+4. Store and synchronize only ciphertext message envelopes in Firestore.
+5. Add QR/deep-link transport for the existing invitation codes.

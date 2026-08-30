@@ -2,7 +2,7 @@ import React from 'react';
 import {ActivityIndicator, StyleSheet, View} from 'react-native';
 
 import {colors} from '../../../theme/colors';
-import {ChatPrototype} from '../../chat/screens/ChatPrototype';
+import {ProfileGate} from '../../profile/screens/ProfileGate';
 import {useAuthSession} from '../hooks/useAuthSession';
 import {AuthScreen} from './AuthScreen';
 
@@ -21,7 +21,7 @@ export function AuthGate() {
     return <AuthScreen onCreateAccount={auth.createAccount} onSignIn={auth.signIn} />;
   }
 
-  return <ChatPrototype accountEmail={auth.user.email} onSignOut={auth.endSession} />;
+  return <ProfileGate onSignOut={auth.endSession} user={auth.user} />;
 }
 
 const styles = StyleSheet.create({
