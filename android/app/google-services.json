@@ -1,0 +1,30 @@
+{
+  "project_info": {
+    "project_number": "322974422414",
+    "firebase_url": "https://nook-73e02-default-rtdb.firebaseio.com",
+    "project_id": "nook-73e02",
+    "storage_bucket": "nook-73e02.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:322974422414:android:42ee8c800db5d479acc0df",
+        "android_client_info": {
+          "package_name": "com.clubgamerzone.nook"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDh9B1I3utHW6_7Gk3vEHeIvknG2bW61ww"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

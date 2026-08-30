@@ -10,7 +10,9 @@ has been validated.
 - Conversation list and one-to-one text conversation UI
 - Development-only in-memory repository
 - Typed repository and cryptography boundaries
-- No production encryption, persistence, authentication, or network transport yet
+- Firebase email/password account gate
+- Native Firebase Authentication and Firestore modules
+- No production encryption, message persistence, or message transport yet
 
 The visible warning in the conversation screen is intentional. It must remain
 until an audited native cryptography adapter is connected and verified on both
@@ -49,6 +51,14 @@ Android requires JDK 17, Android SDK Platform 35, Build Tools 36, and the SDK
 
 The Android application ID and iOS bundle identifier are both
 `com.clubgamerzone.nook`.
+
+## Firebase
+
+The native configurations target Firebase project `nook-73e02`. Email/password
+authentication must be enabled in the Firebase console before account creation
+will work. Firestore rules are intentionally deny-all until the invitation and
+ciphertext message schemas are finalized; do not deploy permissive development
+rules or write plaintext chat content to Firestore.
 
 ## Next milestone
 

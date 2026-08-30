@@ -7,9 +7,11 @@ import {PrivacyBadge} from '../components/PrivacyBadge';
 import type {Conversation} from '../domain/models';
 
 type Props = {
+  accountEmail: string | null;
   conversations: Conversation[];
   onAddPerson: () => void;
   onOpenConversation: (conversation: Conversation) => void;
+  onSignOut: () => Promise<void>;
 };
 
 function formatTime(iso: string) {
@@ -20,9 +22,11 @@ function formatTime(iso: string) {
 }
 
 export function ConversationListScreen({
+  accountEmail,
   conversations,
   onAddPerson,
   onOpenConversation,
+  onSignOut,
 }: Props) {
   const insets = useSafeAreaInsets();
 
@@ -72,11 +76,21 @@ export function ConversationListScreen({
           </Pressable>
         )}
         ListFooterComponent={
-          <View style={styles.footerNote}>
-            <Text style={styles.footerTitle}>Messages stay separate</Text>
-            <Text style={styles.footerText}>
-              Nook will lock this area whenever the app leaves the foreground.
-            </Text>
+          <View>
+            <View style={styles.footerNote}>
+              <Text style={styles.footerTitle}>Messages stay separate</Text>
+              <Text style={styles.footerText}>
+                Nook will lock this area whenever the app leaves the foreground.
+              </Text>
+            </View>
+            <View style={styles.accountRow}>
+              <Text numberOfLines={1} style={styles.accountText}>
+                Signed in as {accountEmail ?? 'private account'}
+              </Text>
+              <Pressable accessibilityRole="button" onPress={onSignOut}>
+                <Text style={styles.signOut}>Sign out</Text>
+              </Pressable>
+            </View>
           </View>
         }
       />
@@ -152,4 +166,13 @@ const styles = StyleSheet.create({
   },
   footerTitle: {color: colors.text, fontSize: 14, fontWeight: '700'},
   footerText: {color: colors.textMuted, fontSize: 13, lineHeight: 19, marginTop: 4},
+  accountRow: {
+    alignItems: 'center',
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    paddingHorizontal: 4,
+    paddingTop: 22,
+  },
+  accountText: {color: colors.textMuted, flex: 1, fontSize: 12, marginRight: 12},
+  signOut: {color: colors.inkSoft, fontSize: 12, fontWeight: '800'},
 });

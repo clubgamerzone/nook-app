@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>API_KEY</key>
+	<string>AIzaSyDnWk_Qu5PjoYuDjZOPTx8DTAjqdyCCIQo</string>
+	<key>GCM_SENDER_ID</key>
+	<string>322974422414</string>
+	<key>PLIST_VERSION</key>
+	<string>1</string>
+	<key>BUNDLE_ID</key>
+	<string>com.clubgamerzone.nook</string>
+	<key>PROJECT_ID</key>
+	<string>nook-73e02</string>
+	<key>STORAGE_BUCKET</key>
+	<string>nook-73e02.firebasestorage.app</string>
+	<key>IS_ADS_ENABLED</key>
+	<false></false>
+	<key>IS_ANALYTICS_ENABLED</key>
+	<false></false>
+	<key>IS_APPINVITE_ENABLED</key>
+	<true></true>
+	<key>IS_GCM_ENABLED</key>
+	<true></true>
+	<key>IS_SIGNIN_ENABLED</key>
+	<true></true>
+	<key>GOOGLE_APP_ID</key>
+	<string>1:322974422414:ios:5239aa65a456f7d1acc0df</string>
+	<key>DATABASE_URL</key>
+	<string>https://nook-73e02-default-rtdb.firebaseio.com</string>
+</dict>
+</plist>

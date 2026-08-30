@@ -1,0 +1,11 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Secure default: no client data is accepted until the invitation,
+    // participant authorization, and ciphertext-only schemas are finalized.
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}

@@ -7,7 +7,12 @@ import {useChatPrototype} from '../hooks/useChatPrototype';
 import {ConversationListScreen} from './ConversationListScreen';
 import {ConversationScreen} from './ConversationScreen';
 
-export function ChatPrototype() {
+type Props = {
+  accountEmail: string | null;
+  onSignOut: () => Promise<void>;
+};
+
+export function ChatPrototype({accountEmail, onSignOut}: Props) {
   const insets = useSafeAreaInsets();
   const chat = useChatPrototype();
 
@@ -32,8 +37,10 @@ export function ChatPrototype() {
 
   return (
     <ConversationListScreen
+      accountEmail={accountEmail}
       conversations={chat.conversations}
       onOpenConversation={chat.openConversation}
+      onSignOut={onSignOut}
       onAddPerson={() =>
         Alert.alert(
           'Invitations come next',
