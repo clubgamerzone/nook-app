@@ -59,6 +59,9 @@ yarn-error.log
 # Bundle artifact
 *.jsbundle
 
+# Generated screenshots and local delivery archives
+/artifacts/
+
 # Ruby / CocoaPods
 **/Pods/
 /vendor/bundle/

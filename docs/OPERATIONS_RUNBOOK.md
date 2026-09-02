@@ -47,6 +47,8 @@ npm run test:rules
 
 Android requires JDK 17 and the Android SDK. iOS compilation requires macOS and Xcode.
 
+Generated screen captures and delivery archives are kept locally under `artifacts/`. The directory is intentionally ignored by Git because its files are reproducible binaries and the ZIP duplicates the individual images. Move selected, final store artwork into a dedicated tracked documentation or store-assets directory only when it becomes an approved release asset.
+
 ### Android APK for direct installation
 
 ```powershell
