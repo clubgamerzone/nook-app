@@ -84,6 +84,8 @@ If Android reports a signature conflict, uninstall the older copy first. Uninsta
 
 ### Google Play AAB
 
+The repeatable upload-key creation, local configuration, AAB verification, and Play Console upload workflow is documented in `docs/ANDROID_INTERNAL_TESTING.md`.
+
 After a private upload key is configured:
 
 ```powershell
@@ -92,6 +94,8 @@ Set-Location android
 ```
 
 Output: `android/app/build/outputs/bundle/release/app-release.aab`
+
+Release Gradle tasks intentionally fail when neither the ignored `android/keystore.properties` file nor all four `NOOK_UPLOAD_*` environment variables are configured. This prevents another accidental debug-signed release artifact.
 
 ## Firebase access and deployment
 
@@ -135,3 +139,5 @@ Do not commit service-account keys, upload keystores, passwords, or cloud creden
 ## Google Play preparation
 
 All copy, declarations, asset specifications, reviewer instructions, and signing warnings are maintained in `docs/GOOGLE_PLAY_CONSOLE.md`.
+
+The step-by-step internal testing build and upload procedure is maintained in `docs/ANDROID_INTERNAL_TESTING.md`.

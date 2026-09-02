@@ -73,6 +73,37 @@ def enableProguardInReleaseBuilds = false
  */
 def jscFlavor = 'io.github.react-native-community:jsc-android:2026004.+'
 
+def releaseKeystoreProperties = new Properties()
+def releaseKeystorePropertiesFile = rootProject.file('keystore.properties')
+if (releaseKeystorePropertiesFile.exists()) {
+    releaseKeystorePropertiesFile.withInputStream { releaseKeystoreProperties.load(it) }
+}
+
+def releaseStoreFile = System.getenv('NOOK_UPLOAD_STORE_FILE') ?:
+        releaseKeystoreProperties.getProperty('storeFile')
+def releaseStorePassword = System.getenv('NOOK_UPLOAD_STORE_PASSWORD') ?:
+        releaseKeystoreProperties.getProperty('storePassword')
+def releaseKeyAlias = System.getenv('NOOK_UPLOAD_KEY_ALIAS') ?:
+        releaseKeystoreProperties.getProperty('keyAlias')
+def releaseKeyPassword = System.getenv('NOOK_UPLOAD_KEY_PASSWORD') ?:
+        releaseKeystoreProperties.getProperty('keyPassword')
+def hasReleaseSigning = [
+    releaseStoreFile,
+    releaseStorePassword,
+    releaseKeyAlias,
+    releaseKeyPassword,
+].every { it != null && !it.trim().isEmpty() }
+def requestedReleaseBuild = gradle.startParameter.taskNames.any {
+    it.toLowerCase().contains('release')
+}
+
+if (requestedReleaseBuild && !hasReleaseSigning) {
+    throw new GradleException(
+        'Release signing is not configured. Copy android/keystore.properties.example ' +
+        'to android/keystore.properties and fill it in, or set the NOOK_UPLOAD_* environment variables.'
+    )
+}
+
 android {
     ndkVersion rootProject.ext.ndkVersion
     buildToolsVersion rootProject.ext.buildToolsVersion
@@ -93,15 +124,21 @@ android {
             keyAlias 'androiddebugkey'
             keyPassword 'android'
         }
+        release {
+            if (hasReleaseSigning) {
+                storeFile rootProject.file(releaseStoreFile)
+                storePassword releaseStorePassword
+                keyAlias releaseKeyAlias
+                keyPassword releaseKeyPassword
+            }
+        }
     }
     buildTypes {
         debug {
             signingConfig signingConfigs.debug
         }
         release {
-            // Caution! In production, you need to generate your own keystore file.
-            // see https://reactnative.dev/docs/signed-apk-android.
-            signingConfig signingConfigs.debug
+            signingConfig signingConfigs.release
             minifyEnabled enableProguardInReleaseBuilds
             proguardFiles getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro"
         }
