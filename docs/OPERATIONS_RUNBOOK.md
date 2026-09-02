@@ -58,6 +58,30 @@ Output: `android/app/build/outputs/apk/release/app-release.apk`
 
 The current release configuration still uses the debug keystore. It is suitable only for local beta installation, not as the permanent Google Play signing configuration.
 
+Latest verified direct-install build (September 2, 2026):
+
+- Source commit: `b857db1`
+- Package: `com.clubgamerzone.nook`
+- Version: `1.0` (`versionCode` 1)
+- Minimum/target API: 24/36
+- Build command: `android/.\gradlew.bat clean assembleRelease`
+- Gradle result: `BUILD SUCCESSFUL`
+- APK size: 71,832,617 bytes
+- SHA-256: `2DBEC83917CF441818D5A9012A797739A76B3AA575DA06BACEF70FFF1EE19D0E`
+- APK Signature Scheme v2 verification: passed
+- Signing certificate: Android Debug; certificate SHA-256 `fac61745dc0903786fb9ede62a962b399f7348f0bb6f899b8332667591033b9c`
+- Repository build output: `android/app/build/outputs/apk/release/app-release.apk`
+- Shareable copy created outside Git: `D:\React Native\Secret app\Nook-1.0-beta.apk`
+
+Install over USB when a device is visible to ADB:
+
+```powershell
+adb devices
+adb install -r "D:\React Native\Secret app\Nook-1.0-beta.apk"
+```
+
+If Android reports a signature conflict, uninstall the older copy first. Uninstalling removes that app's device-local organizer and PIN data. The September 2 verification device was no longer connected when installation was attempted, so the APK was signature- and metadata-verified but not installed during this build session.
+
 ### Google Play AAB
 
 After a private upload key is configured:
@@ -111,4 +135,3 @@ Do not commit service-account keys, upload keystores, passwords, or cloud creden
 ## Google Play preparation
 
 All copy, declarations, asset specifications, reviewer instructions, and signing warnings are maintained in `docs/GOOGLE_PLAY_CONSOLE.md`.
-
