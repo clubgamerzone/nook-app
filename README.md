@@ -34,3 +34,5 @@ Native configuration targets Firebase project `nook-73e02`. Deploy the Firestore
 - [Privacy policy draft](docs/PRIVACY_POLICY.md)
 - [App Review notes](docs/APP_REVIEW_NOTES.md)
 - [Release readiness and security gates](docs/RELEASE_READINESS.md)
+- [Google Play Console submission guide](docs/GOOGLE_PLAY_CONSOLE.md)
+- [Project operations runbook](docs/OPERATIONS_RUNBOOK.md)
